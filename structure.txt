@@ -1,0 +1,51 @@
+prisoner-dilemma-app/
+├── .github/                          # GitHub workflows and CI configuration
+│   └── workflows/
+│       └── tests.yml                 # Test execution workflow
+├── .vscode/                          # VS Code settings
+│   └── extensions.json               # Recommended extensions
+├── public/                           # Static assets
+│   ├── favicon.ico
+│   └── robots.txt
+├── src/                              # Application source code
+│   ├── components/                   # Web components organized by feature
+│   │   ├── player-registration/
+│   │   │   ├── player-form.ts       # Player registration component
+│   │   │   └── player-form.test.ts  # Unit tests with Vitest
+│   │   ├── connection/
+│   │   │   └── ...
+│   │   └── game/
+│   │       └── ...
+│   ├── utils/                        # Utility functions
+│   │   ├── game-logic.ts            # Game logic functions
+│   │   └── game-logic.test.ts       # Unit tests for game logic
+│   ├── services/                     # Service modules
+│   │   ├── storage-service.ts       # Local storage service
+│   │   └── connection-service.ts    # Connection handling service
+│   ├── types/                        # TypeScript type definitions
+│   │   ├── player.ts                # Player-related types
+│   │   └── game.ts                  # Game-related types
+│   ├── styles/                       # Global styles
+│   │   └── index.css                # Main CSS file with Tailwind imports
+│   ├── index.html                    # Main HTML entry
+│   ├── index.ts                      # Main TypeScript entry
+│   └── prisoner-dilemma-app.ts      # Main app component
+├── test/                             # Component tests with @web/test-runner
+│   ├── components/
+│   │   ├── player-form.test.ts      # Player form component tests
+│   │   └── ...
+│   └── helpers/                      # Test helpers and fixtures
+│       └── test-utils.ts            # Common test utilities
+├── .editorconfig                     # Editor configuration
+├── .gitignore                        # Git ignore file
+├── LICENSE                           # Project license
+├── README.md                         # Project readme
+├── index.html                        # Vite entry point
+├── package.json                      # Project dependencies and scripts
+├── postcss.config.js                 # PostCSS configuration (if needed)
+├── tailwind.config.js                # Tailwind CSS configuration
+├── tsconfig.json                     # TypeScript configuration
+├── tsconfig.node.json                # TypeScript Node configuration
+├── vite.config.ts                    # Vite configuration
+├── vitest.config.ts                  # Vitest configuration
+└── web-test-runner.config.mjs        # Web Test Runner configuration

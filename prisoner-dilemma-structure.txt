@@ -1,0 +1,26 @@
+./
+├── prisoner-dilemma-app/
+│   ├── .husky/
+│   │   └── pre-commit
+│   ├── .storybook/
+│   │   └── main.js
+│   ├── .vscode/
+│   │   └── extensions.json
+│   ├── demo/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── index.ts
+│   │   ├── prisoner-dilemma-app.ts
+│   │   └── PrisonerDilemmaApp.ts
+│   ├── stories/
+│   │   └── index.stories.ts
+│   ├── test/
+│   │   └── prisoner-dilemma-app.test.ts
+│   ├── .editorconfig
+│   ├── .gitignore
+│   ├── LICENSE
+│   ├── package.json
+│   ├── README.md
+│   ├── tsconfig.json
+│   ├── web-dev-server.config.js
+│   └── web-test-runner.config.js

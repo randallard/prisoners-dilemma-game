@@ -3,6 +3,10 @@ import { customElement, property } from 'lit/decorators.js';
 // Update this path to match your project structure
 import tailwindStyles from '../../tailwind-output.css?inline';
 
+/**
+ * Player registration form component
+ * Allows new players to register with a name
+ */
 @customElement('player-form')
 export class PlayerForm extends LitElement {
   @property({ type: String }) playerName = '';
@@ -31,16 +35,12 @@ export class PlayerForm extends LitElement {
                 @input=${this._handleInput}
                 @keydown=${this._handleKeyDown}
                 placeholder="Enter your name"
-                class="w-full px-4 py-3 border-2 ${this.hasError ? 'border-red-500' : 'border-blue-300'} 
+                class="w-full px-4 py-3 border-2 ${this._getInputClasses()} 
                        rounded-lg shadow-sm focus:outline-none focus:border-blue-500
                        text-lg transition-colors duration-200"
                 aria-required="true"
               />
-              ${this.hasError ? html`
-                <p class="mt-2 text-sm text-red-600 font-medium">
-                  Please enter your name to continue
-                </p>
-              ` : ''}
+              ${this._renderErrorMessage()}
             </div>
           </div>
 
@@ -57,6 +57,27 @@ export class PlayerForm extends LitElement {
     `;
   }
   
+  /**
+   * Returns CSS classes for the input field based on validation state
+   */
+  private _getInputClasses(): string {
+    return this.hasError ? 'border-red-500' : 'border-blue-300';
+  }
+  
+  /**
+   * Renders error message when validation fails
+   */
+  private _renderErrorMessage() {
+    return this.hasError ? html`
+      <p class="mt-2 text-sm text-red-600 font-medium">
+        Please enter your name to continue
+      </p>
+    ` : '';
+  }
+  
+  /**
+   * Handles keydown events, specifically for Enter key submission
+   */
   private _handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       e.preventDefault(); // Prevent default form submission
@@ -64,6 +85,10 @@ export class PlayerForm extends LitElement {
     }
   }
 
+  /**
+   * Updates playerName property when input changes
+   * Clears error state if input is not empty
+   */
   private _handleInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.playerName = input.value;
@@ -72,6 +97,10 @@ export class PlayerForm extends LitElement {
     }
   }
 
+  /**
+   * Handles form submission
+   * Validates input and dispatches register event if valid
+   */
   private _handleSubmit(e: Event) {
     e.preventDefault();
     

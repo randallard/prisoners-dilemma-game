@@ -1,63 +1,89 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-
-interface RegisterEventDetail {
-  name: string;
-}
+// Update this path to match your project structure
+import tailwindStyles from '../../tailwind-output.css?inline';
 
 @customElement('player-form')
 export class PlayerForm extends LitElement {
-  @property({ type: String }) 
-  playerName = '';
+  @property({ type: String }) playerName = '';
+  @property({ type: Boolean }) hasError = false;
 
-  static styles = css`
-    .form-container {
-      @apply p-4 bg-gray-100 rounded shadow-md;
-    }
-    
-    label {
-      @apply block text-gray-700 text-sm font-bold mb-2;
-    }
-    
-    input {
-      @apply shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight;
-    }
-    
-    button {
-      @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4;
-    }
-  `;
-
-  handleSubmit(e: Event): void {
-    e.preventDefault();
-    this.dispatchEvent(new CustomEvent<RegisterEventDetail>('register', {
-      detail: { name: this.playerName }
-    }));
-  }
-
-  handleInput(e: Event): void {
-    const input = e.target as HTMLInputElement;
-    this.playerName = input.value;
-  }
+  // Use unsafeCSS to include the Tailwind styles
+  static styles = css`${unsafeCSS(tailwindStyles)}`;
 
   render() {
     return html`
-      <div class="form-container">
-        <form @submit="${this.handleSubmit}">
+      <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">
+          Welcome to Prisoner's Dilemma
+        </h2>
+        
+        <p class="instructions text-gray-600 mb-6 text-center">
+          Just enter your name to get started!
+        </p>
+
+        <form @submit=${this._handleSubmit} class="space-y-6">
           <div>
-            <label for="playerName">Your Name</label>
-            <input
-              type="text"
-              id="playerName"
-              .value="${this.playerName}"
-              @input="${this.handleInput}"
-              placeholder="Enter your name"
-              required
-            />
+            <div class="relative">
+              <input
+                type="text"
+                .value=${this.playerName}
+                @input=${this._handleInput}
+                @keydown=${this._handleKeyDown}
+                placeholder="Enter your name"
+                class="w-full px-4 py-3 border-2 ${this.hasError ? 'border-red-500' : 'border-blue-300'} 
+                       rounded-lg shadow-sm focus:outline-none focus:border-blue-500
+                       text-lg transition-colors duration-200"
+                aria-required="true"
+              />
+              ${this.hasError ? html`
+                <p class="mt-2 text-sm text-red-600 font-medium">
+                  Please enter your name to continue
+                </p>
+              ` : ''}
+            </div>
           </div>
-          <button type="submit">Register</button>
+
+          <button
+            type="submit"
+            class="w-full py-3 px-4 border-0 rounded-lg shadow-md text-lg font-medium 
+                   text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
+                   focus:ring-blue-500 transition-colors duration-200"
+          >
+            Register
+          </button>
         </form>
       </div>
     `;
+  }
+  
+  private _handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default form submission
+      this._handleSubmit(e);
+    }
+  }
+
+  private _handleInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    this.playerName = input.value;
+    if (this.playerName) {
+      this.hasError = false;
+    }
+  }
+
+  private _handleSubmit(e: Event) {
+    e.preventDefault();
+    
+    if (!this.playerName.trim()) {
+      this.hasError = true;
+      return;
+    }
+
+    this.dispatchEvent(new CustomEvent('register', {
+      detail: { name: this.playerName },
+      bubbles: true,
+      composed: true
+    }));
   }
 }

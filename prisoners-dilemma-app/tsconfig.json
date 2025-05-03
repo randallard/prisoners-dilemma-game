@@ -1,25 +1,29 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-
-    /* Linting */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true,
+    "types": ["vitest/globals", "@open-wc/testing", "node"]
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "generate-tailwind.cjs"],
+  "exclude": ["vite.config.ts", "vitest.config.ts", "web-test-runner.config.mjs"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

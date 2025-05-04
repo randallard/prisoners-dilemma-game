@@ -7,6 +7,7 @@
     "check": "tsc --noEmit",
     "predev": "node generate-tailwind.cjs",
     "dev": "vite",
+    "dev:test": "npm test && npm run dev",
     "prebuild": "node generate-tailwind.cjs",
     "build": "tsc && vite build",
     "preview": "vite preview",

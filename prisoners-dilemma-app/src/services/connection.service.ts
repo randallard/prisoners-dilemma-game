@@ -1,3 +1,4 @@
+// connection.service.ts
 export enum ConnectionStatus {
     PENDING = 'pending',
     ACTIVE = 'active'
@@ -42,34 +43,75 @@ export enum ConnectionStatus {
       return connectionLink;
     }
     
+    /**
+     * Retrieves all connections from localStorage
+     * @returns Array of all connection data objects
+     */
     public getConnections(): ConnectionData[] {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+      return this.loadConnections();
     }
     
+    /**
+     * Retrieves a specific connection by its ID
+     * @param connectionId The ID of the connection to find
+     * @returns The connection data object if found, or null if not found
+     */
     public getConnectionById(connectionId: string): ConnectionData | null {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+      const connections = this.loadConnections();
+      const connection = connections.find(conn => conn.id === connectionId);
+      return connection || null;
     }
     
+    /**
+     * Retrieves connections filtered by status
+     * @param status The status to filter connections by (PENDING or ACTIVE)
+     * @returns Array of connection data objects matching the status
+     */
     public getConnectionsByStatus(status: ConnectionStatus): ConnectionData[] {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+      const connections = this.loadConnections();
+      return connections.filter(conn => conn.status === status);
     }
     
-    public acceptConnection(connectionId: string, myName: string): void {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+    /**
+     * Accepts a connection request, changing its status to ACTIVE
+     * @param connectionId The ID of the connection to accept
+     * @param myName The name of the current player (not needed in this implementation)
+     */
+    public acceptConnection(connectionId: string): void {
+      const connections = this.loadConnections();
+      const connectionIndex = connections.findIndex(conn => conn.id === connectionId);
+      
+      if (connectionIndex !== -1) {
+        connections[connectionIndex].status = ConnectionStatus.ACTIVE;
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(connections));
+      }
     }
     
+    /**
+     * Registers an incoming connection request
+     * @param connectionId The ID of the incoming connection
+     * @param externalFriendName The name of the friend who initiated the connection
+     */
     public registerIncomingConnection(connectionId: string, externalFriendName: string): void {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+      const connectionData: ConnectionData = {
+        id: connectionId,
+        name: externalFriendName.trim(),
+        status: ConnectionStatus.PENDING,
+        initiatedByMe: false,
+        createdAt: Date.now()
+      };
+      
+      this.saveConnection(connectionData);
     }
     
+    /**
+     * Deletes a connection by its ID
+     * @param connectionId The ID of the connection to delete
+     */
     public deleteConnection(connectionId: string): void {
-      // This will be implemented later
-      throw new Error('Method not implemented');
+      const connections = this.loadConnections();
+      const filteredConnections = connections.filter(conn => conn.id !== connectionId);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredConnections));
     }
     
     /**

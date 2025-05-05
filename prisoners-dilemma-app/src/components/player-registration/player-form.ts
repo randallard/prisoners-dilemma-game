@@ -1,5 +1,6 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+// Update this path to match your project structure
 import tailwindStyles from '../../tailwind-output.css?inline';
 
 /**
@@ -13,31 +14,6 @@ export class PlayerForm extends LitElement {
 
   // Use unsafeCSS to include the Tailwind styles
   static styles = css`${unsafeCSS(tailwindStyles)}`;
-
-  // IMPORTANT: Shadow DOM setting for Lit components
-  // Completely disable Shadow DOM to ensure events propagate correctly
-  override createRenderRoot() {
-    console.log('PlayerForm: Disabling Shadow DOM to ensure event propagation');
-    return this;  // Disables Shadow DOM to ensure events propagate correctly
-  }
-
-  constructor() {
-    super();
-    console.log('PlayerForm component created');
-    console.log('Component shadowRoot:', this.shadowRoot);
-    
-    // Test dispatching an event directly
-    setTimeout(() => {
-      console.log('Testing event dispatching from PlayerForm');
-      const testEvent = new CustomEvent('test-event', {
-        detail: { test: 'data' },
-        bubbles: true,
-        composed: true
-      });
-      console.log('Dispatching test event');
-      this.dispatchEvent(testEvent);
-    }, 1000);
-  }
 
   render() {
     return html`
@@ -55,7 +31,6 @@ export class PlayerForm extends LitElement {
             <div class="relative">
               <input
                 type="text"
-                id="playerNameInput"
                 .value=${this.playerName}
                 @input=${this._handleInput}
                 @keydown=${this._handleKeyDown}
@@ -71,7 +46,6 @@ export class PlayerForm extends LitElement {
 
           <button
             type="submit"
-            id="registerButton"
             class="w-full py-3 px-4 border-0 rounded-lg shadow-md text-lg font-medium 
                    text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
                    focus:ring-blue-500 transition-colors duration-200"
@@ -126,69 +100,19 @@ export class PlayerForm extends LitElement {
   /**
    * Handles form submission
    * Validates input and dispatches register event if valid
-   * Uses multiple dispatching methods to ensure the event is captured
    */
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    console.log('Form submitted, playerName =', this.playerName);
     
     if (!this.playerName.trim()) {
       this.hasError = true;
       return;
     }
 
-    console.log('Dispatching register event with data:', { name: this.playerName });
-    
-    // Create the event with proper bubbling and composition
-    const registerEvent = new CustomEvent('register', {
-      detail: { name: this.playerName },
-      bubbles: true,
-      composed: true
-    });
-    
-    // Multiple dispatch methods to ensure event is captured
-    
-    // 1. Standard component event dispatch
-    console.log('Dispatching register event from component');
-    this.dispatchEvent(registerEvent);
-    
-    // 2. Dispatch directly from form element for better propagation
-    const form = this.querySelector('form');
-    if (form) {
-      console.log('Dispatching register event from form element');
-      form.dispatchEvent(new CustomEvent('register', {
-        detail: { name: this.playerName },
-        bubbles: true,
-        composed: true
-      }));
-    }
-    
-    // 3. Dispatch at document level
-    console.log('Dispatching register event at document level');
-    document.dispatchEvent(new CustomEvent('register', {
+    this.dispatchEvent(new CustomEvent('register', {
       detail: { name: this.playerName },
       bubbles: true,
       composed: true
     }));
-    
-    // 4. Fallback - dispatch event at window level
-    console.log('Dispatching fallback event at window level');
-    window.dispatchEvent(new CustomEvent('register-fallback', {
-      detail: { name: this.playerName }
-    }));
-    
-    // 5. Create and dispatch a native DOM event as another fallback
-    console.log('Creating and dispatching native DOM event');
-    try {
-      const nativeEvent = document.createEvent('Event');
-      nativeEvent.initEvent('register-native', true, true);
-      (nativeEvent as any).detail = { name: this.playerName };
-      this.dispatchEvent(nativeEvent);
-      document.dispatchEvent(nativeEvent);
-    } catch (error) {
-      console.error('Error dispatching native event:', error);
-    }
-    
-    console.log('All register events dispatched');
   }
 }

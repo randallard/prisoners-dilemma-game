@@ -156,7 +156,4 @@ describe('GameApp', () => {
     // Check that the name was saved
     expect(savedName).to.equal('Test Player');
   });
-
-  
-
 });

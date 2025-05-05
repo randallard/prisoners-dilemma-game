@@ -63,9 +63,11 @@ Copy-ToAIChatFiles -SourcePath "../prisoners-dilemma-docs/docs/project-plan-and-
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/game-app.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/player-registration/player-form.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/player-storage.service.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/connection.service.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/game-app.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/player-form.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/services/player-storage.service.test.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/services/connection.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/index.html"
 
 # Copy user stories if the flag is set

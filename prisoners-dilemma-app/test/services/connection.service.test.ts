@@ -121,8 +121,7 @@ describe('ConnectionService', () => {
     mockLocalStorage.setItem('prisonersDilemma_connections', JSON.stringify(connections));
     
     // Act - Accept the connection
-    const myName = 'My Name';
-    service.acceptConnection(connectionId, myName);
+    service.acceptConnection(connectionId);
     
     // Assert
     const storedData = JSON.parse(mockLocalStorage.getItem('prisonersDilemma_connections') || '[]');

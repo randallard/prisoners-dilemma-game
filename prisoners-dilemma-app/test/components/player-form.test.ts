@@ -1,4 +1,3 @@
-
 import { html, fixture, expect, oneEvent, waitUntil } from '@open-wc/testing';
 import { PlayerForm } from '../../src/components/player-registration/player-form';
 

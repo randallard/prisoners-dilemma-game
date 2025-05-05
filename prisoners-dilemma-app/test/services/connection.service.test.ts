@@ -289,6 +289,11 @@ describe('ConnectionService', () => {
       
       // Act & Assert
       expect(() => service.registerIncomingConnection(connectionId, 'Another Friend')).to.throw('Connection with this ID already exists');
+      
+      // Verify the first connection was not overwritten
+      const connection = service.getConnectionById(connectionId);
+      expect(connection).to.exist;
+      expect(connection?.name).to.equal('Friend'); // Should still have the original name
     });
   });
   

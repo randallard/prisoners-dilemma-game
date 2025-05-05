@@ -152,13 +152,14 @@ export enum ConnectionStatus {
         throw new Error('Friend name cannot be empty');
       }
       
+      // Check if connection already exists - this check needs to be outside the try/catch
+      // so that we can throw the specific error message the test is expecting
+      const existingConnection = this.getConnectionById(connectionId);
+      if (existingConnection) {
+        throw new Error('Connection with this ID already exists');
+      }
+      
       try {
-        // Check if connection already exists
-        const existingConnection = this.getConnectionById(connectionId);
-        if (existingConnection) {
-          throw new Error('Connection with this ID already exists');
-        }
-        
         const connectionData: ConnectionData = {
           id: connectionId,
           name: externalFriendName.trim(),

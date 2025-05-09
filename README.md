@@ -8,7 +8,7 @@ A game based on the project in
 
 ## Development
 
-run tests with
+Run tests with:
 
 ```bash
 # Run unit tests with Vitest
@@ -20,3 +20,23 @@ npm run test:components
 # Run all tests
 npm run test
 ```
+
+## AI Development Tools
+
+Use the PowerShell script to prepare files for AI assistant review:
+
+```powershell
+# Basic usage - copies core project files only
+.\get-current-for-ai.ps1
+
+# Include the 3 most recent journal entries
+.\get-current-for-ai.ps1 -JournalEntries 3
+
+# Include user stories documentation
+.\get-current-for-ai.ps1 -IncludeUserStories
+
+# Include both journal entries and user stories
+.\get-current-for-ai.ps1 -JournalEntries 2 -IncludeUserStories
+```
+
+The script copies selected files to an `ai-chat-files` directory for easy sharing with AI assistants.

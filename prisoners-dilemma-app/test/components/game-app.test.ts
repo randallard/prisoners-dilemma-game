@@ -1,6 +1,8 @@
-import { html, fixture, expect, oneEvent, waitUntil } from '@open-wc/testing';
+import { html, fixture, expect, oneEvent } from '@open-wc/testing';
 import { GameApp } from '../../src/components/game-app';
-import { PlayerStorageService } from '../../src/services/player-storage.service';
+import { PlayerStorageService, PlayerData } from '../../src/services/player-storage.service';
+import { Result } from '../../src/services/connection-result';
+import { PlayerError, PlayerErrorType } from '../../src/services/player-result';
 
 // Make sure the component definition is registered
 import '../../src/components/game-app';
@@ -9,31 +11,76 @@ import '../../src/components/player-registration/player-form';
 // Create a mock implementation of PlayerStorageService
 class MockPlayerStorageService extends PlayerStorageService {
   // Override methods for testing
-  savePlayer(name: string): string {
+  savePlayer(name: string): Result<string, PlayerError> {
+    if (!name || name.trim() === '') {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.INVALID_NAME,
+          'Player name cannot be empty'
+        )
+      );
+    }
+    
     // Set mock values instead of actually using localStorage
     this.mockPlayerId = 'test-id-123';
     this.mockPlayerName = name;
     this.mockOpenCount = 1;
-    return this.mockPlayerId;
+    
+    return Result.success(this.mockPlayerId);
   }
 
-  getPlayer() {
-    if (!this.mockPlayerId) return null;
-    return {
+  getPlayer(): Result<PlayerData, PlayerError> {
+    if (!this.mockPlayerId) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.PLAYER_NOT_FOUND,
+          'No player data found'
+        )
+      );
+    }
+    
+    return Result.success({
       id: this.mockPlayerId,
       name: this.mockPlayerName,
       openCount: this.mockOpenCount
-    };
+    });
   }
 
-  incrementOpenCount() {
-    if (this.mockOpenCount) {
-      this.mockOpenCount++;
+  incrementOpenCount(): Result<boolean, PlayerError> {
+    if (!this.mockPlayerId) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.PLAYER_NOT_FOUND,
+          'No player data found'
+        )
+      );
     }
+    
+    this.mockOpenCount++;
+    return Result.success(true);
   }
 
-  updatePlayerName(name: string) {
+  updatePlayerName(name: string): Result<boolean, PlayerError> {
+    if (!this.mockPlayerId) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.PLAYER_NOT_FOUND,
+          'No player data found'
+        )
+      );
+    }
+    
+    if (!name || name.trim() === '') {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.INVALID_NAME,
+          'Player name cannot be empty'
+        )
+      );
+    }
+    
     this.mockPlayerName = name;
+    return Result.success(true);
   }
 
   // Override protected method for testing
@@ -45,6 +92,19 @@ class MockPlayerStorageService extends PlayerStorageService {
   private mockPlayerId: string | null = null;
   private mockPlayerName: string = '';
   private mockOpenCount: number = 0;
+  
+  // Helper for testing
+  public setMockPlayer(id: string, name: string, openCount: number) {
+    this.mockPlayerId = id;
+    this.mockPlayerName = name;
+    this.mockOpenCount = openCount;
+  }
+  
+  public clearMockPlayer() {
+    this.mockPlayerId = null;
+    this.mockPlayerName = '';
+    this.mockOpenCount = 0;
+  }
 }
 
 describe('GameApp', () => {
@@ -54,10 +114,6 @@ describe('GameApp', () => {
   beforeEach(async () => {
     // Reset the mock service completely for each test
     mockService = new MockPlayerStorageService();
-    
-    // Define a fixed behavior for getPlayer initially
-    // This is critical - an inconsistent mock can lead to infinite updates
-    const noPlayer = mockService.getPlayer() === null;
     
     // Create element with fixture
     element = await fixture<GameApp>(html`<game-app></game-app>`);
@@ -70,8 +126,8 @@ describe('GameApp', () => {
   });
 
   it('shows registration form when no player exists', async () => {
-    // Explicitly ensure no player exists
-    mockService.getPlayer = () => null;
+    // Ensure no player exists
+    mockService.clearMockPlayer();
     
     // Trigger update and wait for it to complete
     await element.requestUpdate();
@@ -83,10 +139,13 @@ describe('GameApp', () => {
   });
 
   it('shows game screen when player exists', async () => {
-    mockService.savePlayer('Test Player');
+    // Set up mock player data
+    mockService.setMockPlayer('test-id-123', 'Test Player', 1);
     
     // Use the dedicated testing method instead of direct property access
-    element.setPlayerForTesting(mockService.getPlayer());
+    const playerResult = mockService.getPlayer();
+    expect(playerResult.isSuccess()).to.be.true;
+    element.setPlayerForTesting(playerResult.getValue());
     
     // Force re-render and wait for update to complete
     await element.updateComplete;
@@ -107,10 +166,9 @@ describe('GameApp', () => {
     expect(openCountElement?.textContent).to.include('1');
   });
 
-  // We'll add the event test back after fixing the core tests
   it('saves player data when registration form is submitted', async () => {
     // Ensure no player exists
-    mockService.getPlayer = () => null;
+    mockService.clearMockPlayer();
     
     // Trigger update to show the form
     await element.requestUpdate();
@@ -120,24 +178,13 @@ describe('GameApp', () => {
     const form = element.shadowRoot!.querySelector('player-form');
     expect(form).to.exist;
     
-    // Track if savePlayer was called
+    // Track if savePlayer was called with correct name
     let savedName = '';
+    const originalSavePlayer = mockService.savePlayer;
     mockService.savePlayer = (name: string) => {
       savedName = name;
-      return 'test-id-123';
-    };
-    
-    // Configure getPlayer to return a player AFTER savePlayer is called
-    let playerWasSaved = false;
-    mockService.getPlayer = () => {
-      if (playerWasSaved) {
-        return {
-          id: 'test-id-123',
-          name: savedName,
-          openCount: 1
-        };
-      }
-      return null;
+      mockService.setMockPlayer('test-id-123', name, 1);
+      return Result.success('test-id-123');
     };
     
     // Dispatch the register event
@@ -147,13 +194,56 @@ describe('GameApp', () => {
       composed: true
     }));
     
-    // Mark that player was saved to change mock behavior
-    playerWasSaved = true;
-    
     // Wait for update to complete
     await element.updateComplete;
     
     // Check that the name was saved
     expect(savedName).to.equal('Test Player');
+    
+    // Check that the game screen is now showing
+    const gameScreen = element.shadowRoot!.querySelector('.game-screen');
+    expect(gameScreen).to.exist;
+  });
+  
+  it('shows error screen when player storage fails', async () => {
+    // Ensure no player exists
+    mockService.clearMockPlayer();
+    
+    // Set up mock to simulate a storage error
+    mockService.savePlayer = () => Result.failure(
+      new PlayerError(
+        PlayerErrorType.STORAGE_ERROR,
+        'Failed to save player data'
+      )
+    );
+    
+    // Get and submit the form
+    const form = element.shadowRoot!.querySelector('player-form');
+    expect(form).to.exist;
+    
+    form!.dispatchEvent(new CustomEvent('register', {
+      detail: { name: 'Test Player' },
+      bubbles: true,
+      composed: true
+    }));
+    
+    // Wait for update to complete
+    await element.updateComplete;
+    
+    // Check that the error screen is showing
+    const errorScreen = element.shadowRoot!.querySelector('.error-screen');
+    expect(errorScreen).to.exist;
+    expect(errorScreen!.textContent).to.include('Failed to save player data');
+    
+    // Check that the error can be dismissed
+    const tryAgainButton = element.shadowRoot!.querySelector<HTMLButtonElement>('.error-screen button');
+    expect(tryAgainButton).to.exist;
+    
+    tryAgainButton!.click();
+    await element.updateComplete;
+    
+    // Should now show the registration form again
+    const registrationForm = element.shadowRoot!.querySelector('player-form');
+    expect(registrationForm).to.exist;
   });
 });

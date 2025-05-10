@@ -145,37 +145,51 @@ describe('ConnectionFormComponent', () => {
   });
   
   it('shows copy confirmation after clicking copy button', async () => {
-    // First, mock the clipboard API
+    // First, mock the clipboard API with Object.defineProperty
     const originalClipboard = navigator.clipboard;
-    // @ts-ignore - This is a mock
-    navigator.clipboard = {
+    
+    const mockClipboard = {
       writeText: async () => Promise.resolve()
     };
     
-    // Generate a link first
-    element.friendName = 'Test Friend';
-    await element.updateComplete;
+    // Properly mock navigator.clipboard to avoid getter issues
+    Object.defineProperty(navigator, 'clipboard', {
+      writable: true,
+      configurable: true,
+      value: mockClipboard
+    });
     
-    const form = element.shadowRoot!.querySelector('form');
-    form!.dispatchEvent(new Event('submit'));
-    await element.updateComplete;
-    
-    // Get and click the copy button
-    const copyButton = element.shadowRoot!.querySelector('.copy-button');
-    expect(copyButton).to.exist;
-    copyButton!.dispatchEvent(new Event('click'));
-    
-    // Wait for Lit's update cycle to complete
-    await element.updateComplete;
-    
-    // Check for copied message
-    const copyConfirmation = element.shadowRoot!.querySelector('.copy-confirmation');
-    expect(copyConfirmation).to.exist;
-    expect(copyConfirmation!.textContent!.trim()).to.include('Copied!');
-    
-    // Restore original clipboard
-    // @ts-ignore - Restoring mock
-    navigator.clipboard = originalClipboard;
+    try {
+      // Generate a link first
+      element.friendName = 'Test Friend';
+      await element.updateComplete;
+      
+      const form = element.shadowRoot!.querySelector('form');
+      form!.dispatchEvent(new Event('submit'));
+      await element.updateComplete;
+      
+      // Get and click the copy button
+      const copyButton = element.shadowRoot!.querySelector('.copy-button');
+      expect(copyButton).to.exist;
+      copyButton!.dispatchEvent(new Event('click'));
+      
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // Wait for Lit's update cycle to complete
+      await element.updateComplete;
+      
+      // Check for copied message
+      const copyConfirmation = element.shadowRoot!.querySelector('.copy-confirmation');
+      expect(copyConfirmation).to.exist;
+      expect(copyConfirmation!.textContent!.trim()).to.include('Copied!');
+    } finally {
+      // Always restore original clipboard
+      Object.defineProperty(navigator, 'clipboard', {
+        writable: true,
+        configurable: true,
+        value: originalClipboard
+      });
+    }
   });
   
   it('shows error message when connection generation fails', async () => {

@@ -146,20 +146,20 @@ export class ConnectionListComponent extends LitElement {
   
   render() {
     return html`
-      <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-4">
           Your Connections
         </h2>
         
         ${this._renderErrorMessage()}
         
         <div class="mb-4">
-          <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="status-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Filter by Status
           </label>
           <select
             id="status-filter"
-            class="status-filter w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            class="status-filter w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             @change=${this._handleFilterChange}
           >
             <option value="all" ?selected=${this.currentFilter === 'all'}>All Connections</option>
@@ -178,7 +178,7 @@ export class ConnectionListComponent extends LitElement {
    */
   private _renderErrorMessage() {
     return this.errorMessage ? html`
-      <div class="error-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+      <div class="error-message bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative mb-4" role="alert">
         <strong class="font-bold">Error:</strong>
         <span class="block sm:inline">${this.errorMessage}</span>
         <button 
@@ -186,7 +186,7 @@ export class ConnectionListComponent extends LitElement {
           class="dismiss-error-button absolute top-0 bottom-0 right-0 px-4 py-3"
         >
           <span class="sr-only">Dismiss</span>
-          <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg class="h-6 w-6 text-red-500 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -201,11 +201,11 @@ export class ConnectionListComponent extends LitElement {
     if (this.loading) {
       return html`
         <div class="loading-indicator flex items-center justify-center py-8">
-          <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <span class="ml-3 text-lg text-gray-600">Loading connections...</span>
+          <span class="ml-3 text-lg text-gray-600 dark:text-gray-300">Loading connections...</span>
         </div>
       `;
     }
@@ -213,10 +213,10 @@ export class ConnectionListComponent extends LitElement {
     if (this.connections.length === 0) {
       return html`
         <div class="empty-state py-8 text-center">
-          <p class="text-gray-500 text-lg mb-4">No connections found.</p>
-          <p class="text-gray-500">
+          <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">No connections found.</p>
+          <p class="text-gray-500 dark:text-gray-400">
             ${this.currentFilter !== 'all' 
-            ? html`<button @click=${() => this.currentFilter = 'all'} class="text-blue-600 hover:underline">View all connections</button>` 
+            ? html`<button @click=${() => this.currentFilter = 'all'} class="text-blue-600 dark:text-blue-400 hover:underline">View all connections</button>` 
             : html`Generate a connection link to invite a friend.`}
           </p>
         </div>
@@ -264,17 +264,17 @@ export class ConnectionListComponent extends LitElement {
    */
   private _renderConnectionItem(connection: ConnectionData) {
     return html`
-      <li class="connection-item border rounded-lg p-4 shadow-sm">
+      <li class="connection-item border dark:border-gray-700 rounded-lg p-4 shadow-sm bg-white dark:bg-gray-700">
         <div class="flex items-center justify-between mb-2">
-          <span class="connection-name font-medium text-lg">${connection.name}</span>
+          <span class="connection-name font-semibold text-lg text-gray-900 dark:text-gray-100">${connection.name}</span>
           <span 
-            class="status-indicator ${connection.status === ConnectionStatus.ACTIVE ? 'active bg-green-100 text-green-800' : 'pending bg-yellow-100 text-yellow-800'} px-2 py-1 rounded-full text-xs font-semibold"
+            class="status-indicator ${connection.status === ConnectionStatus.ACTIVE ? 'active bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' : 'pending bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300'} px-2 py-1 rounded-full text-xs font-semibold"
           >
             ${connection.status === ConnectionStatus.ACTIVE ? 'Active' : 'Pending'}
           </span>
         </div>
         
-        <div class="text-sm text-gray-500 mb-3">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">
           ${connection.initiatedByMe 
             ? 'You invited this person' 
             : 'This person invited you'}
@@ -299,7 +299,7 @@ export class ConnectionListComponent extends LitElement {
       return html`
         <button
           @click=${() => this._handleDelete(connection.id, connection.name)}
-          class="delete-button px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200"
+          class="delete-button px-3 py-1 bg-red-600 dark:bg-red-700 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors duration-200"
         >
           Cancel Invitation
         </button>
@@ -311,13 +311,13 @@ export class ConnectionListComponent extends LitElement {
       return html`
         <button
           @click=${() => this._handleDelete(connection.id, connection.name)}
-          class="delete-button px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200 mr-2"
+          class="delete-button px-3 py-1 bg-gray-600 dark:bg-gray-600 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-200 mr-2"
         >
           Decline
         </button>
         <button
           @click=${() => this._handleAccept(connection.id)}
-          class="accept-button px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200"
+          class="accept-button px-3 py-1 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200"
         >
           Accept
         </button>
@@ -329,13 +329,13 @@ export class ConnectionListComponent extends LitElement {
       return html`
         <button
           @click=${() => this._handleDelete(connection.id, connection.name)}
-          class="delete-button px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200 mr-2"
+          class="delete-button px-3 py-1 bg-gray-600 dark:bg-gray-600 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-200 mr-2"
         >
           Remove
         </button>
         <button
           @click=${() => this._handlePlay(connection.id, connection.name)}
-          class="play-button px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200"
+          class="play-button px-3 py-1 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors duration-200"
         >
           Play
         </button>
@@ -346,9 +346,10 @@ export class ConnectionListComponent extends LitElement {
     return html`
       <button
         @click=${() => this._handleDelete(connection.id, connection.name)}
-        class="delete-button px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200"
+        class="delete-button px-3 py-1 bg-red-600 dark:bg-red-700 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors duration-200"
       >
         Delete
       </button>
     `;
   }
+}

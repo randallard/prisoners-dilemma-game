@@ -1,11 +1,25 @@
 # PowerShell script to copy relevant files to ai-chat-files directory
+#
+# Usage examples:
+#
+# 1. Basic usage - copies core project files only
+#    .\get-current-for-ai.ps1
+#
+# 2. Include the 3 most recent journal entries
+#    .\get-current-for-ai.ps1 -JournalEntries 3
+#
+# 3. Include user stories documentation
+#    .\get-current-for-ai.ps1 -IncludeUserStories
+#
+# 4. Include both journal entries and user stories
+#    .\get-current-for-ai.ps1 -JournalEntries 2 -IncludeUserStories
 
 param (
     [Parameter()]
-    [int]$JournalEntries = 0,  # Default to 1 if not specified
+    [int]$JournalEntries = 0,  # Number of recent journal entries to include (0 = none)
 
     [Parameter()]
-    [switch]$IncludeUserStories = $false  # New flag to include user stories
+    [switch]$IncludeUserStories = $false  # Flag to include user stories documentation
 )
 
 # Helper function to copy files to the ai-chat-files directory
@@ -62,6 +76,9 @@ Write-Host "Created directory: $aiChatFilesDir" -ForegroundColor Cyan
 Copy-ToAIChatFiles -SourcePath "../prisoners-dilemma-docs/docs/project-plan-and-status.md"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/game-app.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/player-registration/player-form.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/connection/connection-list.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/connection/connection-form.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/connection/connection-manager.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/player-storage.service.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/uuid-utils.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/connection.service.ts"
@@ -69,11 +86,14 @@ Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/connection-re
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/player-result.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/game-app.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/player-form.test.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/connection-list.test.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/connection-form.test.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/connection-manager.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/services/player-storage.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/services/connection.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/index.html"
 
-# Copy user stories if the flag is set
+# Copy user stories if the -IncludeUserStories flag is set
 if ($IncludeUserStories) {
     $userStoriesPath = "../prisoners-dilemma-docs/docs/technical/user-stories.md"
     Copy-ToAIChatFiles -SourcePath $userStoriesPath
@@ -82,9 +102,9 @@ if ($IncludeUserStories) {
     }
 }
 
-# Find and copy the latest N journal entries
+# Find and copy the latest N journal entries if -JournalEntries parameter > 0
 $journalDir = "../prisoners-dilemma-docs/docs/development-journal"
-if (Test-Path $journalDir) {
+if ($JournalEntries -gt 0 -and (Test-Path $journalDir)) {
     # Get all entry files with pattern entry-*.md and sort them
     $entryFiles = Get-ChildItem -Path $journalDir -Filter "entry-*.md" | 
                   Where-Object { $_.Name -match "entry-\d+\.md" } |
@@ -103,7 +123,9 @@ if (Test-Path $journalDir) {
         Write-Host "Warning: No journal entries found in $journalDir" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "Warning: Could not find journal directory $journalDir" -ForegroundColor Yellow
+    if ($JournalEntries -gt 0) {
+        Write-Host "Warning: Could not find journal directory $journalDir" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "Script completed successfully!" -ForegroundColor Cyan

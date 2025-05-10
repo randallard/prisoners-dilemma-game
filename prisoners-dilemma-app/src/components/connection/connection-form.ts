@@ -29,12 +29,12 @@ export class ConnectionFormComponent extends LitElement {
   
   render() {
     return html`
-      <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-2">
           Connect with a Friend
         </h2>
         
-        <p class="instructions text-gray-600 mb-6 text-center">
+        <p class="instructions text-gray-600 dark:text-gray-300 mb-6 text-center">
           Enter a name for your friend to generate a connection link you can share.
         </p>
         
@@ -63,7 +63,9 @@ export class ConnectionFormComponent extends LitElement {
               placeholder="Enter your friend's name"
               class="w-full px-4 py-3 border-2 ${this._getInputClasses()} 
                      rounded-lg shadow-sm focus:outline-none focus:border-blue-500
-                     text-lg transition-colors duration-200"
+                     text-lg transition-colors duration-200
+                     bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                     placeholder-gray-400 dark:placeholder-gray-500"
               aria-required="true"
             />
           </div>
@@ -72,8 +74,9 @@ export class ConnectionFormComponent extends LitElement {
         <button
           type="submit"
           class="w-full py-3 px-4 border-0 rounded-lg shadow-md text-lg font-medium 
-                 text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
-                 focus:ring-blue-500 transition-colors duration-200"
+                 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                 transition-colors duration-200"
         >
           Generate Connection Link
         </button>
@@ -86,16 +89,19 @@ export class ConnectionFormComponent extends LitElement {
    */
   private _renderLinkContainer() {
     return html`
-      <div class="link-container bg-gray-100 p-4 rounded-lg mb-6">
-        <h3 class="font-medium text-gray-800 mb-2">Your Connection Link:</h3>
-        <div class="connection-link bg-white p-3 border rounded mb-4 break-all overflow-x-auto text-blue-600">
+      <div class="link-container bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-6">
+        <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-2">Your Connection Link:</h3>
+        <div class="connection-link bg-white dark:bg-gray-800 p-3 border dark:border-gray-600 rounded mb-4 break-all overflow-x-auto text-blue-600 dark:text-blue-400">
           ${this.connectionLink}
         </div>
         
         <div class="flex space-x-3">
           <button
             @click=${this._handleCopyLink}
-            class="copy-button flex-1 py-2 px-4 border-0 rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+            class="copy-button flex-1 py-2 px-4 border-0 rounded shadow-sm text-white 
+                   bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                   transition-colors duration-200"
           >
             ${this.showCopyConfirmation ? html`
               <span class="copy-confirmation flex items-center justify-center">
@@ -109,7 +115,10 @@ export class ConnectionFormComponent extends LitElement {
           
           <button
             @click=${this._handleGenerateNewLink}
-            class="new-link-button flex-1 py-2 px-4 border-0 rounded shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+            class="new-link-button flex-1 py-2 px-4 border-0 rounded shadow-sm text-white 
+                   bg-gray-600 hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500
+                   focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400
+                   transition-colors duration-200"
           >
             New Link
           </button>
@@ -123,7 +132,7 @@ export class ConnectionFormComponent extends LitElement {
    */
   private _renderErrorMessage() {
     return this.errorMessage ? html`
-      <div class="error-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+      <div class="error-message bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative mb-4" role="alert">
         <strong class="font-bold">Error:</strong>
         <span class="block sm:inline">${this.errorMessage}</span>
         <button 
@@ -131,7 +140,7 @@ export class ConnectionFormComponent extends LitElement {
           class="dismiss-error-button absolute top-0 bottom-0 right-0 px-4 py-3"
         >
           <span class="sr-only">Dismiss</span>
-          <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg class="h-6 w-6 text-red-500 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -143,7 +152,7 @@ export class ConnectionFormComponent extends LitElement {
    * Returns CSS classes for the input field based on validation state
    */
   private _getInputClasses(): string {
-    return this.hasError ? 'border-red-500' : 'border-blue-300';
+    return this.hasError ? 'border-red-500 dark:border-red-400' : 'border-blue-300 dark:border-gray-600';
   }
   
   /**

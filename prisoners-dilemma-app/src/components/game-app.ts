@@ -23,6 +23,16 @@ export class GameApp extends LitElement {
   public playerStorageService: PlayerStorageService = new PlayerStorageService();
   public connectionService: ConnectionService = new ConnectionService();
   
+  // Bound event handler reference - important for proper removeEventListener
+  // Changed type from CustomEvent to Event to match EventListener interface
+  private boundHandleGameRequested: (e: Event) => void;
+  
+  constructor() {
+    super();
+    // Bind the event handler in the constructor
+    this.boundHandleGameRequested = this.handleGameRequested.bind(this);
+  }
+  
   // Use unsafeCSS to include the Tailwind styles
   static styles = css`${unsafeCSS(tailwindStyles)}`;
   
@@ -55,14 +65,15 @@ export class GameApp extends LitElement {
     }
     
     // Listen for game-requested events from connection manager
-    this.addEventListener('game-requested', this.handleGameRequested);
+    // Use the bound reference
+    this.addEventListener('game-requested', this.boundHandleGameRequested);
   }
   
   disconnectedCallback() {
     super.disconnectedCallback();
     
-    // Remove event listeners
-    this.removeEventListener('game-requested', this.handleGameRequested);
+    // Remove event listeners - use the same bound reference
+    this.removeEventListener('game-requested', this.boundHandleGameRequested);
   }
   
   render() {
@@ -223,10 +234,12 @@ export class GameApp extends LitElement {
    * Handles the game-requested event from the connection manager
    * @param e The event
    */
-  private handleGameRequested = (e: CustomEvent) => {
-    const { connectionId, connectionName } = e.detail;
+  private handleGameRequested(e: Event) {
+    // Cast the Event to CustomEvent to access the detail property
+    const customEvent = e as CustomEvent;
+    const { connectionId, connectionName } = customEvent.detail;
     this.startGame(connectionId, connectionName);
-  };
+  }
   
   /**
    * Starts a game with the specified connection

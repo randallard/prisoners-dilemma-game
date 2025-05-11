@@ -17,12 +17,12 @@ export class PlayerForm extends LitElement {
 
   render() {
     return html`
-      <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-2">
           Welcome to Prisoner's Dilemma
         </h2>
         
-        <p class="instructions text-gray-600 mb-6 text-center">
+        <p class="instructions text-gray-600 dark:text-gray-300 mb-6 text-center">
           Just enter your name to get started!
         </p>
 
@@ -36,8 +36,10 @@ export class PlayerForm extends LitElement {
                 @keydown=${this._handleKeyDown}
                 placeholder="Enter your name"
                 class="w-full px-4 py-3 border-2 ${this._getInputClasses()} 
-                       rounded-lg shadow-sm focus:outline-none focus:border-blue-500
-                       text-lg transition-colors duration-200"
+                       rounded-lg shadow-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400
+                       text-lg transition-colors duration-200
+                       bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                       placeholder-gray-400 dark:placeholder-gray-500"
                 aria-required="true"
               />
               ${this._renderErrorMessage()}
@@ -47,8 +49,9 @@ export class PlayerForm extends LitElement {
           <button
             type="submit"
             class="w-full py-3 px-4 border-0 rounded-lg shadow-md text-lg font-medium 
-                   text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
-                   focus:ring-blue-500 transition-colors duration-200"
+                   text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 
+                   transition-colors duration-200"
           >
             Register
           </button>
@@ -61,7 +64,7 @@ export class PlayerForm extends LitElement {
    * Returns CSS classes for the input field based on validation state
    */
   private _getInputClasses(): string {
-    return this.hasError ? 'border-red-500' : 'border-blue-300';
+    return this.hasError ? 'border-red-500 dark:border-red-400' : 'border-blue-300 dark:border-gray-600';
   }
   
   /**
@@ -69,7 +72,7 @@ export class PlayerForm extends LitElement {
    */
   private _renderErrorMessage() {
     return this.hasError ? html`
-      <p class="mt-2 text-sm text-red-600 font-medium">
+      <p class="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">
         Please enter your name to continue
       </p>
     ` : '';

@@ -2,8 +2,10 @@ import { LitElement, html, css, unsafeCSS } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { PlayerStorageService, PlayerData } from '../services/player-storage.service';
 import { ConnectionService } from '../services/connection.service';
+import { DarkModeService } from '../services/dark-mode.service';
 import './player-registration/player-form';
 import './connection/connection-manager';
+import './dark-mode-toggle';
 
 // Import Tailwind styles
 import tailwindStyles from '../tailwind-output.css?inline';
@@ -22,6 +24,7 @@ export class GameApp extends LitElement {
   // These will be injected in tests but created normally in connectedCallback
   public playerStorageService: PlayerStorageService = new PlayerStorageService();
   public connectionService: ConnectionService = new ConnectionService();
+  public darkModeService: DarkModeService = new DarkModeService();
   
   // Bound event handler reference - important for proper removeEventListener
   // Changed type from CustomEvent to Event to match EventListener interface
@@ -42,6 +45,10 @@ export class GameApp extends LitElement {
     // Initialize services
     this.playerStorageService = new PlayerStorageService();
     this.connectionService = new ConnectionService();
+    this.darkModeService = new DarkModeService();
+    
+    // Initialize dark mode
+    this.darkModeService.initializeDarkMode();
     
     // Load existing player data or show registration
     const playerResult = this.playerStorageService.getPlayer();
@@ -102,33 +109,38 @@ export class GameApp extends LitElement {
   
   private _renderRegistration() {
     return html`
+      <div class="flex justify-between items-center mb-4">
+        <div></div>
+        <dark-mode-toggle></dark-mode-toggle>
+      </div>
       <player-form @register=${this._handleRegister}></player-form>
     `;
   }
   
   private _renderGameLobby() {
     return html`
-      <div class="game-screen bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+      <div class="game-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-4xl mx-auto">
         <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
           <div>
-            <h2 class="text-2xl font-bold text-gray-800">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
               Prisoner's Dilemma
             </h2>
             
             <div class="mt-2">
               <p class="player-name text-lg">
-                Welcome, <span class="font-medium">${this.player?.name}</span>
+                Welcome, <span class="font-medium text-gray-900 dark:text-gray-100">${this.player?.name}</span>
               </p>
-              <p class="open-count text-gray-600 text-sm">
+              <p class="open-count text-gray-600 dark:text-gray-400 text-sm">
                 Times opened: <span class="font-medium">${this.player?.openCount}</span>
               </p>
             </div>
           </div>
           
-          <div class="mt-4 md:mt-0">
+          <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <dark-mode-toggle></dark-mode-toggle>
             <button
               @click=${this._handleSignOut}
-              class="text-sm text-gray-600 hover:text-gray-800 underline"
+              class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 underline transition-colors"
             >
               Sign Out
             </button>
@@ -142,25 +154,28 @@ export class GameApp extends LitElement {
   
   private _renderActiveGame() {
     return html`
-      <div class="game-screen bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+      <div class="game-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Game with ${this.activeConnection?.name}
           </h2>
           
-          <button
-            @click=${this._handleExitGame}
-            class="px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Exit Game
-          </button>
+          <div class="flex items-center space-x-4">
+            <dark-mode-toggle></dark-mode-toggle>
+            <button
+              @click=${this._handleExitGame}
+              class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+            >
+              Exit Game
+            </button>
+          </div>
         </div>
         
-        <div class="text-center p-10 bg-gray-100 rounded-lg">
-          <p class="text-lg text-gray-700 mb-4">
+        <div class="text-center p-10 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
             Game functionality coming soon!
           </p>
-          <p class="text-gray-600">
+          <p class="text-gray-600 dark:text-gray-400">
             You are playing with ${this.activeConnection?.name}
           </p>
         </div>
@@ -170,20 +185,24 @@ export class GameApp extends LitElement {
   
   private _renderErrorScreen() {
     return html`
-      <div class="error-screen bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <h2 class="text-2xl font-bold text-center text-red-600 mb-4">
-          Error
-        </h2>
+      <div class="error-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-center text-red-600 dark:text-red-400">
+            Error
+          </h2>
+          <dark-mode-toggle></dark-mode-toggle>
+        </div>
         
-        <p class="text-center text-gray-700 mb-6">
+        <p class="text-center text-gray-700 dark:text-gray-300 mb-6">
           ${this.errorMessage}
         </p>
         
         <button
           @click=${this._dismissError}
           class="w-full py-3 px-4 border-0 rounded-lg shadow-md text-lg font-medium 
-                 text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
-                 focus:ring-blue-500 transition-colors duration-200"
+                 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 
+                 transition-colors duration-200"
         >
           Try Again
         </button>

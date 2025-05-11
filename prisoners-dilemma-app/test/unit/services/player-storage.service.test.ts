@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
-import { PlayerStorageService } from '../../src/services/player-storage.service';
-import { PlayerErrorType } from '../../src/services/player-result';
+import { PlayerStorageService } from '../../../src/services/player-storage.service';
+import { PlayerErrorType } from '../../../src/services/player-result';
 
 describe('PlayerStorageService', () => {
   let service: PlayerStorageService;

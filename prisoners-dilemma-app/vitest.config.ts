@@ -11,6 +11,17 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
-    include: ['src/**/*.{test,spec}.ts']
-  }
+    include: ['src/**/*.{test,spec}.ts', 'test/unit/**/*.{test,spec}.ts'],
+    setupFiles: ['./test/setup.ts'],
+    // Additional happy-dom specific configuration
+    environmentOptions: {
+      happyDOM: {
+        settings: {
+          disableJavaScriptFileLoading: true,
+          disableJavaScriptEvaluation: true,
+          disableCSSFileLoading: true,
+        },
+      },
+    },
+  },
 });

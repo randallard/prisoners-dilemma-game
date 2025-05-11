@@ -1,6 +1,6 @@
 import { expect } from '@open-wc/testing';
-import { ConnectionService, ConnectionStatus, ConnectionData } from '../../src/services/connection.service';
-import { ConnectionErrorType } from '../../src/services/connection-result';
+import { ConnectionService, ConnectionStatus, ConnectionData } from '../../../src/services/connection.service';
+import { ConnectionErrorType } from '../../../src/services/connection-result';
 
 describe('ConnectionService', () => {
   let service: ConnectionService;

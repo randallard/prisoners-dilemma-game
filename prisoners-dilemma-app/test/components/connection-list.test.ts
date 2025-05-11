@@ -1,103 +1,12 @@
 import { html, fixture, expect, oneEvent, waitUntil } from '@open-wc/testing';
 import { ConnectionListComponent } from '../../src/components/connection/connection-list';
-import { ConnectionService, ConnectionStatus, ConnectionData } from '../../src/services/connection.service';
+import { ConnectionStatus, ConnectionData } from '../../src/services/connection.service';
 import { Result } from '../../src/services/connection-result';
 import { ConnectionError, ConnectionErrorType } from '../../src/services/connection-result';
+import { MockConnectionService } from './mock-connection-service';
 
 // Make sure the component definition is registered
 import '../../src/components/connection/connection-list';
-
-// Create a mock implementation of ConnectionService
-class MockConnectionService extends ConnectionService {
-  // Mock connections for testing
-  private mockConnections: ConnectionData[] = [];
-  
-  // Override key methods for testing
-  getConnections(): Result<ConnectionData[], ConnectionError> {
-    return Result.success([...this.mockConnections]);
-  }
-  
-  getConnectionsByStatus(status: ConnectionStatus): Result<ConnectionData[], ConnectionError> {
-    if (!Object.values(ConnectionStatus).includes(status)) {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.INVALID_STATUS,
-          'Invalid connection status'
-        )
-      );
-    }
-    
-    const filteredConnections = this.mockConnections.filter(conn => conn.status === status);
-    return Result.success([...filteredConnections]);
-  }
-  
-  acceptConnection(connectionId: string): Result<boolean, ConnectionError> {
-    if (!connectionId || connectionId.trim() === '') {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.INVALID_ID,
-          'Connection ID cannot be empty'
-        )
-      );
-    }
-    
-    const connectionIndex = this.mockConnections.findIndex(conn => conn.id === connectionId);
-    if (connectionIndex === -1) {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.CONNECTION_NOT_FOUND,
-          `Connection with ID ${connectionId} not found`
-        )
-      );
-    }
-    
-    this.mockConnections = this.mockConnections.map((conn, index) => {
-      if (index === connectionIndex) {
-        return {
-          ...conn,
-          status: ConnectionStatus.ACTIVE
-        };
-      }
-      return conn;
-    });
-    
-    return Result.success(true);
-  }
-  
-  deleteConnection(connectionId: string): Result<boolean, ConnectionError> {
-    if (!connectionId || connectionId.trim() === '') {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.INVALID_ID,
-          'Connection ID cannot be empty'
-        )
-      );
-    }
-    
-    const initialLength = this.mockConnections.length;
-    this.mockConnections = this.mockConnections.filter(conn => conn.id !== connectionId);
-    
-    if (this.mockConnections.length === initialLength) {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.CONNECTION_NOT_FOUND,
-          `Connection with ID ${connectionId} not found`
-        )
-      );
-    }
-    
-    return Result.success(true);
-  }
-  
-  // Helper methods for testing
-  setMockConnections(connections: ConnectionData[]): void {
-    this.mockConnections = [...connections];
-  }
-  
-  clearMockConnections(): void {
-    this.mockConnections = [];
-  }
-}
 
 describe('ConnectionListComponent', () => {
   let element: ConnectionListComponent;
@@ -274,6 +183,145 @@ describe('ConnectionListComponent', () => {
     const activeConnectionActions = connectionItems[2].querySelector('.connection-actions');
     const activeConnectionPlayButton = activeConnectionActions!.querySelector('.play-button');
     expect(activeConnectionPlayButton).to.exist;
+  });
+  
+  it('shows view/copy link option for pending connections initiated by me', async () => {
+    // Set up mock data with a pending connection initiated by me
+    const mockData: ConnectionData[] = [
+      { 
+        id: 'pending-by-me',
+        name: 'Friend I invited',
+        status: ConnectionStatus.PENDING,
+        initiatedByMe: true,
+        createdAt: Date.now() - 1000
+      }
+    ];
+    
+    mockService.setMockConnections(mockData);
+    
+    // Force refresh
+    element.refreshConnections();
+    await element.updateComplete;
+    
+    // Get the connection item
+    const connectionItem = element.shadowRoot!.querySelector('.connection-item');
+    expect(connectionItem).to.exist;
+    
+    // Check for view/copy link option
+    const viewLinkButton = connectionItem!.querySelector('.view-link-button');
+    expect(viewLinkButton).to.exist;
+    expect(viewLinkButton!.textContent!.trim()).to.include('View Link');
+    
+    // Click the view link button
+    viewLinkButton!.dispatchEvent(new Event('click'));
+    await element.updateComplete;
+    
+    // Check that the link is displayed
+    const linkDisplay = connectionItem!.querySelector('.connection-link-display');
+    expect(linkDisplay).to.exist;
+    
+    // Check for copy link button
+    const copyLinkButton = linkDisplay!.querySelector('.copy-link-button');
+    expect(copyLinkButton).to.exist;
+  });
+  
+  it('indicates that pending connection links can be reshared', async () => {
+    // Set up mock data with a pending connection initiated by me
+    const mockData: ConnectionData[] = [
+      { 
+        id: 'pending-by-me',
+        name: 'Friend I invited',
+        status: ConnectionStatus.PENDING,
+        initiatedByMe: true,
+        createdAt: Date.now() - 1000
+      }
+    ];
+    
+    mockService.setMockConnections(mockData);
+    
+    // Force refresh
+    element.refreshConnections();
+    await element.updateComplete;
+    
+    // Get the connection item
+    const connectionItem = element.shadowRoot!.querySelector('.connection-item');
+    expect(connectionItem).to.exist;
+    
+    // Click the view link button
+    const viewLinkButton = connectionItem!.querySelector('.view-link-button');
+    viewLinkButton!.dispatchEvent(new Event('click'));
+    await element.updateComplete;
+    
+    // Check for reshare indication
+    const linkDisplay = connectionItem!.querySelector('.connection-link-display');
+    const reshareMessage = linkDisplay!.querySelector('.reshare-message');
+    expect(reshareMessage).to.exist;
+    expect(reshareMessage!.textContent!.trim()).to.include('can be reshared');
+  });
+  
+  it('allows copying connection link for pending connections', async () => {
+    // Mock the clipboard API
+    const originalClipboard = navigator.clipboard;
+    
+    const mockClipboard = {
+      writeText: async () => Promise.resolve()
+    };
+    
+    Object.defineProperty(navigator, 'clipboard', {
+      writable: true,
+      configurable: true,
+      value: mockClipboard
+    });
+    
+    try {
+      // Set up mock data
+      const mockData: ConnectionData[] = [
+        { 
+          id: 'pending-connection-id',
+          name: 'Friend to invite',
+          status: ConnectionStatus.PENDING,
+          initiatedByMe: true,
+          createdAt: Date.now() - 1000
+        }
+      ];
+      
+      mockService.setMockConnections(mockData);
+      
+      // Set up the mock connection link
+      mockService.setMockConnectionLink('pending-connection-id', 'https://example.com/game?connection=pending-connection-id');
+      
+      // Force refresh
+      element.refreshConnections();
+      await element.updateComplete;
+      
+      // Get the connection item and click view link
+      const connectionItem = element.shadowRoot!.querySelector('.connection-item');
+      const viewLinkButton = connectionItem!.querySelector('.view-link-button');
+      viewLinkButton!.dispatchEvent(new Event('click'));
+      await element.updateComplete;
+      
+      // Click the copy link button
+      const copyLinkButton = connectionItem!.querySelector('.copy-link-button');
+      expect(copyLinkButton).to.exist;
+      copyLinkButton!.dispatchEvent(new Event('click'));
+      
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
+      // Wait for update
+      await element.updateComplete;
+      
+      // Check for copy confirmation
+      const copyConfirmation = connectionItem!.querySelector('.copy-confirmation');
+      expect(copyConfirmation).to.exist;
+      expect(copyConfirmation!.textContent!.trim()).to.include('Copied');
+    } finally {
+      // Restore original clipboard
+      Object.defineProperty(navigator, 'clipboard', {
+        writable: true,
+        configurable: true,
+        value: originalClipboard
+      });
+    }
   });
   
   it('allows filtering connections by status', async () => {

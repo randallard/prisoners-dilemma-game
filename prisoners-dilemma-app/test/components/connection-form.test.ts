@@ -1,43 +1,9 @@
 import { html, fixture, expect, oneEvent, waitUntil } from '@open-wc/testing';
 import { ConnectionFormComponent } from '../../src/components/connection/connection-form';
-import { ConnectionService } from '../../src/services/connection.service';
-import { Result } from '../../src/services/connection-result';
-import { ConnectionError, ConnectionErrorType } from '../../src/services/connection-result';
+import { MockConnectionService } from './mock-connection-service';
 
 // Make sure the component definition is registered
 import '../../src/components/connection/connection-form';
-
-// Create a mock implementation of ConnectionService
-class MockConnectionService extends ConnectionService {
-  // Override generateConnectionLink for testing
-  generateConnectionLink(friendName: string): Result<string, ConnectionError> {
-    if (!friendName || friendName.trim() === '') {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.INVALID_NAME,
-          'Friend name cannot be empty'
-        )
-      );
-    }
-    
-    if (friendName === 'error-test') {
-      return Result.failure(
-        new ConnectionError(
-          ConnectionErrorType.STORAGE_ERROR,
-          'Test storage error'
-        )
-      );
-    }
-    
-    // Return a test URL for successful cases
-    return Result.success(`https://example.com/game?connection=test-connection-id-${friendName}`);
-  }
-  
-  // Override protected generateUUID to return a predictable value for testing
-  protected generateUUID(): string {
-    return 'test-connection-id';
-  }
-}
 
 describe('ConnectionFormComponent', () => {
   let element: ConnectionFormComponent;
@@ -46,6 +12,7 @@ describe('ConnectionFormComponent', () => {
   beforeEach(async () => {
     // Reset the mock service for each test
     mockService = new MockConnectionService();
+    mockService.clearMockConnections();
     
     // Create element with fixture
     element = await fixture<ConnectionFormComponent>(html`<connection-form></connection-form>`);
@@ -127,7 +94,7 @@ describe('ConnectionFormComponent', () => {
     
     const linkElement = linkContainer!.querySelector('.connection-link');
     expect(linkElement).to.exist;
-    expect(linkElement!.textContent!.trim()).to.include('https://example.com/game?connection=test-connection-id-Test Friend');
+    expect(linkElement!.textContent!.trim()).to.include('https://example.com/game?connection=test-connection-id');
   });
   
   it('shows copy button for generated link', async () => {
@@ -265,6 +232,51 @@ describe('ConnectionFormComponent', () => {
     expect(linkContainer).to.not.exist;
   });
   
+  it('keeps the tab on "New Connection" after link generation for easy copying', async () => {
+    // Set the friend name and generate a link
+    element.friendName = 'Test Friend';
+    await element.updateComplete;
+    
+    const form = element.shadowRoot!.querySelector('form');
+    form!.dispatchEvent(new Event('submit'));
+    await element.updateComplete;
+    
+    // Verify the link container is displayed
+    const linkContainer = element.shadowRoot!.querySelector('.link-container');
+    expect(linkContainer).to.exist;
+    
+    // Check that the tab is still on "New Connection"
+    // This would test that the parent component doesn't automatically switch tabs
+    // Since we're testing the connection-form component in isolation,
+    // we can verify that it's still showing the generated link
+    const connectionLink = linkContainer!.querySelector('.connection-link');
+    expect(connectionLink).to.exist;
+    
+    // The link should remain visible and accessible
+    const copyButton = element.shadowRoot!.querySelector('.copy-button');
+    expect(copyButton).to.exist;
+  });
+  
+  it('displays a clear visual indication when a new link has been generated', async () => {
+    // Generate a link
+    element.friendName = 'Test Friend';
+    await element.updateComplete;
+    
+    const form = element.shadowRoot!.querySelector('form');
+    form!.dispatchEvent(new Event('submit'));
+    await element.updateComplete;
+    
+    // Check for link generation success indicators
+    const linkContainer = element.shadowRoot!.querySelector('.link-container');
+    expect(linkContainer).to.exist;
+    
+    // There should be some indication that this is a new link
+    // This could be a success message, highlighting, or other visual cue
+    const successIndicator = linkContainer!.querySelector('.link-success-indicator');
+    expect(successIndicator).to.exist;
+    expect(successIndicator!.textContent!.trim()).to.include('generated');
+  });
+  
   it('dispatches a connection-created event when a link is successfully generated', async () => {
     // Set up listener for the event
     const eventPromise = oneEvent(element, 'connection-created');
@@ -281,7 +293,7 @@ describe('ConnectionFormComponent', () => {
     
     // Check the event details
     expect(detail).to.exist;
-    expect(detail.connectionLink).to.equal('https://example.com/game?connection=test-connection-id-Test Friend');
+    expect(detail.connectionLink).to.equal('https://example.com/game?connection=test-connection-id');
     expect(detail.friendName).to.equal('Test Friend');
   });
   

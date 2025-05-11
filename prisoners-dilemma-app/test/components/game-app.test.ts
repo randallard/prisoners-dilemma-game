@@ -124,6 +124,30 @@ describe('GameApp', () => {
     // Wait for update to complete
     await element.updateComplete;
   });
+  
+  it('includes dark mode toggle in the game header', async () => {
+    // Set up mock player data to show the game screen
+    mockService.setMockPlayer('test-id-123', 'Test Player', 1);
+    
+    const playerResult = mockService.getPlayer();
+    element.setPlayerForTesting(playerResult.getValue());
+    
+    // Force re-render and wait for update to complete
+    await element.updateComplete;
+    
+    // Check that the game screen is showing
+    const gameScreen = element.shadowRoot!.querySelector('.game-screen');
+    expect(gameScreen).to.exist;
+    
+    // Check for the dark mode toggle in the header
+    const darkModeToggle = element.shadowRoot!.querySelector('dark-mode-toggle');
+    expect(darkModeToggle).to.exist;
+    
+    // Verify it's within the header
+    const header = element.shadowRoot!.querySelector('.game-header');
+    expect(header).to.exist;
+    expect(header!.contains(darkModeToggle)).to.be.true;
+  });
 
   it('shows registration form when no player exists', async () => {
     // Ensure no player exists
@@ -245,5 +269,22 @@ describe('GameApp', () => {
     // Should now show the registration form again
     const registrationForm = element.shadowRoot!.querySelector('player-form');
     expect(registrationForm).to.exist;
+  });
+  
+  it('includes dark mode toggle even when showing registration form', async () => {
+    // Ensure no player exists to show registration form
+    mockService.clearMockPlayer();
+    
+    // Force update to show registration form
+    await element.requestUpdate();
+    await element.updateComplete;
+    
+    // Check that registration form is showing
+    const playerForm = element.shadowRoot!.querySelector('player-form');
+    expect(playerForm).to.exist;
+    
+    // Check for the dark mode toggle
+    const darkModeToggle = element.shadowRoot!.querySelector('dark-mode-toggle');
+    expect(darkModeToggle).to.exist;
   });
 });

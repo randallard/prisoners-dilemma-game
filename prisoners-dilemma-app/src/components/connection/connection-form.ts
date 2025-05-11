@@ -15,6 +15,7 @@ export class ConnectionFormComponent extends LitElement {
   @state() private errorMessage: string | null = null;
   @state() private connectionLink: string | null = null;
   @state() private showCopyConfirmation = false;
+  @state() private successMessage: string | null = null;
   
   // This will be injected in tests but created normally in connectedCallback
   public connectionService: ConnectionService = new ConnectionService();
@@ -39,6 +40,7 @@ export class ConnectionFormComponent extends LitElement {
         </p>
         
         ${this._renderErrorMessage()}
+        ${this._renderSuccessMessage()}
         
         ${this.connectionLink 
           ? this._renderLinkContainer() 
@@ -149,6 +151,27 @@ export class ConnectionFormComponent extends LitElement {
   }
   
   /**
+   * Renders success message if one exists
+   */
+  private _renderSuccessMessage() {
+    return this.successMessage ? html`
+      <div class="link-success-indicator bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">Success:</strong>
+        <span class="block sm:inline">${this.successMessage}</span>
+        <button 
+          @click=${this._dismissSuccess}
+          class="dismiss-success-button absolute top-0 bottom-0 right-0 px-4 py-3"
+        >
+          <span class="sr-only">Dismiss</span>
+          <svg class="h-6 w-6 text-green-500 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    ` : '';
+  }
+  
+  /**
    * Returns CSS classes for the input field based on validation state
    */
   private _getInputClasses(): string {
@@ -198,6 +221,7 @@ export class ConnectionFormComponent extends LitElement {
       this.connectionLink = result.getValue();
       this.errorMessage = null;
       this.hasError = false;
+      this.successMessage = 'Connection link generated';
       
       // Dispatch event to notify parent components
       this.dispatchEvent(new CustomEvent('connection-created', {
@@ -211,6 +235,7 @@ export class ConnectionFormComponent extends LitElement {
     } else {
       this.errorMessage = result.getError().message;
       this.hasError = true;
+      this.successMessage = null;
     }
   }
   
@@ -242,6 +267,7 @@ export class ConnectionFormComponent extends LitElement {
     this.friendName = '';
     this.hasError = false;
     this.errorMessage = null;
+    this.successMessage = null;
     this.showCopyConfirmation = false;
   }
   
@@ -251,5 +277,12 @@ export class ConnectionFormComponent extends LitElement {
   private _dismissError() {
     this.errorMessage = null;
     this.hasError = false;
+  }
+  
+  /**
+   * Dismisses the current success message
+   */
+  private _dismissSuccess() {
+    this.successMessage = null;
   }
 }

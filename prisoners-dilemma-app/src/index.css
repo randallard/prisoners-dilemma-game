@@ -10,6 +10,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Light mode green variables */
+  --success-bg-light: #ecfdf5;
+  --success-border-light: #10b981;
+  --success-text-light: #065f46;
+  
+  /* Dark mode green variables */
+  --success-bg-dark: rgba(6, 95, 70, 0.2);
+  --success-border-dark: #059669;
+  --success-text-dark: #34d399;
 }
 
 a {
@@ -33,12 +43,22 @@ body {
 :root {
   color: #213547;
   background-color: #ffffff;
+  
+  /* Set success variables to light mode values by default */
+  --success-bg: var(--success-bg-light);
+  --success-border: var(--success-border-light);
+  --success-text: var(--success-text-light);
 }
 
 /* Dark mode - applied when 'dark' class is on <html> */
 .dark {
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
+  
+  /* Set success variables to dark mode values when dark class is present */
+  --success-bg: var(--success-bg-dark);
+  --success-border: var(--success-border-dark);
+  --success-text: var(--success-text-dark);
 }
 
 /* Ensure smooth transitions for theme changes */

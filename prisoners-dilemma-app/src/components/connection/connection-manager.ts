@@ -266,10 +266,6 @@ export class ConnectionManagerComponent extends LitElement {
    * @param e The event
    */
   private handleConnectionCreated(_e: Event) {
-    // Switch to the connections list tab
-    this.activeTab = 'connections-list';
-    
-    // Refresh the connections list
     this.refreshConnectionsList();
   }
   

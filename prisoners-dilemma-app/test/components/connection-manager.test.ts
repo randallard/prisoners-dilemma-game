@@ -77,32 +77,6 @@ describe('ConnectionManagerComponent', () => {
     expect(connectionsListTab!.classList.contains('active')).to.be.false;
   });
   
-  it('shows connection list tab after successful connection creation', async () => {
-    // Simulate a connection-created event from the connection form
-    const connectionForm = element.shadowRoot!.querySelector('connection-form');
-    expect(connectionForm).to.exist;
-    
-    connectionForm!.dispatchEvent(new CustomEvent('connection-created', {
-      detail: { 
-        connectionLink: 'https://example.com/game?connection=test-id',
-        friendName: 'Test Friend'
-      },
-      bubbles: true,
-      composed: true
-    }));
-    
-    // Wait for Lit's update cycle to complete
-    await element.updateComplete;
-    
-    // Check that the connections list tab is now active
-    const connectionsListTab = element.shadowRoot!.querySelector('.tab-button[data-tab="connections-list"]');
-    expect(connectionsListTab!.classList.contains('active')).to.be.true;
-    
-    // Connection list should be visible
-    const connectionList = element.shadowRoot!.querySelector('connection-list');
-    expect(connectionList).to.be.visible;
-  });
-  
   it('handles connection deletion confirmation', async () => {
     // Set up mock connections
     mockService.setMockConnections([

@@ -270,11 +270,10 @@ describe('ConnectionFormComponent', () => {
     const linkContainer = element.shadowRoot!.querySelector('.link-container');
     expect(linkContainer).to.exist;
     
-    // There should be some indication that this is a new link
-    // This could be a success message, highlighting, or other visual cue
-    const successIndicator = linkContainer!.querySelector('.link-success-indicator');
+    // The success indicator is NOT inside the link container, it's a separate element
+    const successIndicator = element.shadowRoot!.querySelector('.link-success-indicator');
     expect(successIndicator).to.exist;
-    expect(successIndicator!.textContent!.trim()).to.include('generated');
+    expect(successIndicator!.textContent!.trim()).to.include('Connection link generated');
   });
   
   it('dispatches a connection-created event when a link is successfully generated', async () => {

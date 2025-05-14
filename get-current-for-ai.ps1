@@ -96,6 +96,7 @@ Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/mock-conne
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/player-storage.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/connection.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/dark-mode.service.test.ts"
+Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/index.css"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/index.html"
 
 # Copy user stories if the -IncludeUserStories flag is set

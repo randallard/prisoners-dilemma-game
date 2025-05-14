@@ -14,6 +14,9 @@ export class ConnectionListComponent extends LitElement {
   @state() private connections: ConnectionData[] = [];
   @state() private loading: boolean = true;
   @state() private errorMessage: string | null = null;
+  @state() private viewingLinkForConnectionId: string | null = null;
+  @state() private connectionLink: string | null = null;
+  @state() private linkCopied: boolean = false;
   
   // This will be injected in tests but created normally in connectedCallback
   public connectionService: ConnectionService = new ConnectionService();
@@ -32,6 +35,8 @@ export class ConnectionListComponent extends LitElement {
   public refreshConnections() {
     this.loading = true;
     this.errorMessage = null;
+    this.viewingLinkForConnectionId = null;
+    this.linkCopied = false;
 
     let connectionsResult;
     if (this.currentFilter === 'all') {
@@ -44,6 +49,13 @@ export class ConnectionListComponent extends LitElement {
       this.connections = connectionsResult.getValue();
     } else {
       this.showError(connectionsResult.getError().message);
+      
+      // Dispatch an error event that can be caught by parent components
+      this.dispatchEvent(new CustomEvent('connection-error', {
+        detail: connectionsResult.getError(),
+        bubbles: true,
+        composed: true
+      }));
     }
     
     this.loading = false;
@@ -62,6 +74,11 @@ export class ConnectionListComponent extends LitElement {
    * @param connectionId The ID of the connection to delete
    */
   public confirmDelete(connectionId: string) {
+    if (!connectionId || connectionId.trim() === '') {
+      this.showError('Connection ID cannot be empty');
+      return;
+    }
+    
     const deleteResult = this.connectionService.deleteConnection(connectionId);
     
     if (deleteResult.isSuccess()) {
@@ -75,6 +92,13 @@ export class ConnectionListComponent extends LitElement {
       }));
     } else {
       this.showError(deleteResult.getError().message);
+      
+      // Dispatch an error event that can be caught by parent components
+      this.dispatchEvent(new CustomEvent('connection-error', {
+        detail: deleteResult.getError(),
+        bubbles: true,
+        composed: true
+      }));
     }
   }
   
@@ -93,6 +117,11 @@ export class ConnectionListComponent extends LitElement {
    * @param connectionId The ID of the connection to accept
    */
   private _handleAccept(connectionId: string) {
+    if (!connectionId || connectionId.trim() === '') {
+      this.showError('Connection ID cannot be empty');
+      return;
+    }
+    
     const acceptResult = this.connectionService.acceptConnection(connectionId);
     
     if (acceptResult.isSuccess()) {
@@ -106,6 +135,13 @@ export class ConnectionListComponent extends LitElement {
       }));
     } else {
       this.showError(acceptResult.getError().message);
+      
+      // Dispatch an error event that can be caught by parent components
+      this.dispatchEvent(new CustomEvent('connection-error', {
+        detail: acceptResult.getError(),
+        bubbles: true,
+        composed: true
+      }));
     }
   }
   
@@ -137,6 +173,64 @@ export class ConnectionListComponent extends LitElement {
     }));
   }
 
+  /**
+   * Handles clicking the view link button for a connection
+   * @param connectionId The ID of the connection to view the link for
+   */
+  private _handleViewLink(connectionId: string) {
+    // Reset copy state
+    this.linkCopied = false;
+    
+    if (this.viewingLinkForConnectionId === connectionId) {
+      // Toggle off if already viewing
+      this.viewingLinkForConnectionId = null;
+      this.connectionLink = null;
+      return;
+    }
+
+    const linkResult = this.connectionService.getConnectionLink(connectionId);
+    
+    if (linkResult.isSuccess()) {
+      this.viewingLinkForConnectionId = connectionId;
+      this.connectionLink = linkResult.getValue();
+    } else {
+      this.showError(linkResult.getError().message);
+      
+      // Dispatch an error event that can be caught by parent components
+      this.dispatchEvent(new CustomEvent('connection-error', {
+        detail: linkResult.getError(),
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
+
+  /**
+   * Handles clicking the copy link button
+   */
+  private async _handleCopyLink() {
+    if (!this.connectionLink) {
+      this.showError('No connection link to copy');
+      return;
+    }
+
+    try {
+      // Using the Clipboard API to copy the link
+      await navigator.clipboard.writeText(this.connectionLink);
+      
+      // Show success message by setting linkCopied to true
+      this.linkCopied = true;
+      
+      // Reset the copied state after a delay (matching the 2 seconds in connection-form)
+      setTimeout(() => {
+        this.linkCopied = false;
+      }, 2000);
+    } catch (err) {
+      // Simple error handling - just show the error message
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      this.showError(`Failed to copy link: ${errorMessage}`);
+    }
+  }
   /**
    * Dismisses the current error message
    */
@@ -282,6 +376,8 @@ export class ConnectionListComponent extends LitElement {
           ${this._formatDateFromTimestamp(connection.createdAt)}
         </div>
         
+        ${this.viewingLinkForConnectionId === connection.id ? this._renderConnectionLink() : ''}
+        
         <div class="connection-actions flex justify-end space-x-2">
           ${this._renderConnectionActions(connection)}
         </div>
@@ -290,13 +386,54 @@ export class ConnectionListComponent extends LitElement {
   }
   
   /**
+   * Renders the connection link display
+   */
+  private _renderConnectionLink() {
+    return html`
+      <div class="connection-link-display mb-3 p-3 bg-gray-100 dark:bg-gray-600 rounded">
+        <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Share this link with your friend:</h3>
+        <div class="connection-link bg-white dark:bg-gray-800 p-3 border dark:border-gray-600 rounded mb-4 break-all overflow-x-auto text-blue-600 dark:text-blue-400">
+          ${this.connectionLink}
+        </div>
+        
+        <button
+          @click=${this._handleCopyLink}
+          class="copy-link-button w-full py-2 px-4 border-0 rounded shadow-sm text-white 
+                bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600
+                focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                transition-colors duration-200"
+        >
+          ${this.linkCopied ? html`
+            <span class="copy-confirmation flex items-center justify-center">
+              <svg class="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Copied!
+            </span>
+          ` : 'Copy Link'}
+        </button>
+        
+        <p class="reshare-message text-xs text-gray-500 dark:text-gray-400 mt-2">
+          This link can be reshared until your friend accepts the connection.
+        </p>
+      </div>
+    `;
+  }
+
+  /**
    * Renders the appropriate action buttons for a connection based on its status
    * @param connection The connection data
    */
   private _renderConnectionActions(connection: ConnectionData) {
-    // Pending connection initiated by me - show delete option
+    // Pending connection initiated by me - show view link and delete options
     if (connection.status === ConnectionStatus.PENDING && connection.initiatedByMe) {
       return html`
+        <button
+          @click=${() => this._handleViewLink(connection.id)}
+          class="view-link-button px-3 py-1 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 mr-2"
+        >
+          ${this.viewingLinkForConnectionId === connection.id ? 'Hide Link' : 'View Link'}
+        </button>
         <button
           @click=${() => this._handleDelete(connection.id, connection.name)}
           class="delete-button px-3 py-1 bg-red-600 dark:bg-red-700 text-white rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors duration-200"

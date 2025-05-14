@@ -546,4 +546,51 @@ describe('ConnectionListComponent', () => {
     // Verify the correct connection ID was included in the event
     expect(detail.connectionId).to.equal('active-connection');
   });
+
+  it('should toggle connection link display when clicking view/hide link', async () => {
+    // Set up mock data with a pending connection initiated by me
+    const mockData: ConnectionData[] = [
+      { 
+        id: 'pending-by-me',
+        name: 'Friend I invited',
+        status: ConnectionStatus.PENDING,
+        initiatedByMe: true,
+        createdAt: Date.now() - 1000
+      }
+    ];
+    
+    // Set up the mock link
+    const mockLink = 'https://example.com/game?connection=pending-by-me';
+    mockService.setMockConnections(mockData);
+    mockService.setMockConnectionLink('pending-by-me', mockLink);
+    
+    // Force refresh
+    element.refreshConnections();
+    await element.updateComplete;
+    
+    // Get the connection item
+    const connectionItem = element.shadowRoot!.querySelector('.connection-item');
+    expect(connectionItem).to.exist;
+    
+    // Check that the link is initially hidden
+    let linkDisplay = connectionItem!.querySelector('.connection-link-display');
+    expect(linkDisplay).to.not.exist;
+    
+    // Click the view link button to show the link
+    const viewLinkButton = connectionItem!.querySelector('.view-link-button');
+    viewLinkButton!.dispatchEvent(new Event('click'));
+    await element.updateComplete;
+    
+    // Check that the link is now displayed
+    linkDisplay = connectionItem!.querySelector('.connection-link-display');
+    expect(linkDisplay).to.exist;
+    
+    // Click the button again to hide the link
+    viewLinkButton!.dispatchEvent(new Event('click'));
+    await element.updateComplete;
+    
+    // Check that the link is hidden again
+    linkDisplay = connectionItem!.querySelector('.connection-link-display');
+    expect(linkDisplay).to.not.exist;
+  });
 });

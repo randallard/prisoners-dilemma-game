@@ -420,6 +420,52 @@ describe('ConnectionService', () => {
     });
   });
   
+  describe('getConnectionLink', () => {
+    it('should retrieve a connection link for a given connection ID', () => {
+      // Arrange
+      const friendName = 'Test Friend';
+      const connectionLinkResult = service.generateConnectionLink(friendName);
+      expect(connectionLinkResult.isSuccess()).to.be.true;
+      
+      const connectionLink = connectionLinkResult.getValue();
+      
+      // Extract the connection ID from the link
+      const url = new URL(connectionLink);
+      const connectionId = url.searchParams.get('connection') as string;
+      
+      // Act
+      const result = service.getConnectionLink(connectionId);
+      
+      // Assert
+      expect(result.isSuccess()).to.be.true;
+      const retrievedLink = result.getValue();
+      
+      expect(retrievedLink).to.be.a('string');
+      expect(retrievedLink).to.equal(connectionLink);
+    });
+    
+    it('should return failure when getting a link for a non-existent connection', () => {
+      // Act
+      const result = service.getConnectionLink('non-existent-id');
+      
+      // Assert
+      expect(result.isFailure()).to.be.true;
+      const error = result.getError();
+      expect(error.type).to.equal(ConnectionErrorType.CONNECTION_NOT_FOUND);
+    });
+    
+    it('should return failure when called with an empty ID', () => {
+      // Act
+      const result = service.getConnectionLink('');
+      
+      // Assert
+      expect(result.isFailure()).to.be.true;
+      const error = result.getError();
+      expect(error.type).to.equal(ConnectionErrorType.INVALID_ID);
+      expect(error.message).to.equal('Connection ID cannot be empty');
+    });
+  });
+
   describe('acceptConnection', () => {
     it('should accept a connection request', () => {
       // Arrange - Create a fake connection in localStorage as if it was initiated by someone else

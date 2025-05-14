@@ -75,7 +75,6 @@ Write-Host "Created directory: $aiChatFilesDir" -ForegroundColor Cyan
 # Copy the project plan and status file using the new helper function
 Copy-ToAIChatFiles -SourcePath "../prisoners-dilemma-docs/docs/project-plan-and-status.md"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/game-app.ts"
-Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/dark-mode-toggle.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/player-registration/player-form.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/connection/connection-list.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/components/connection/connection-form.ts"
@@ -84,9 +83,7 @@ Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/player-storag
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/uuid-utils.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/connection.service.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/connection-result.ts"
-Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/dark-mode.service.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/services/player-result.ts"
-Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/dark-mode-toggle.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/game-app.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/player-form.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/connection-list.test.ts"
@@ -95,7 +92,6 @@ Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/connection
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/components/mock-connection-service.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/player-storage.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/connection.service.test.ts"
-Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/test/unit/services/dark-mode.service.test.ts"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/src/index.css"
 Copy-ToAIChatFiles -SourcePath "prisoners-dilemma-app/index.html"
 

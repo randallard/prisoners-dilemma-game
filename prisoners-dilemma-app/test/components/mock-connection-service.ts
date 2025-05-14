@@ -217,4 +217,5 @@ export class MockConnectionService extends ConnectionService {
   setMockConnectionLink(connectionId: string, link: string): void {
     this.mockConnectionLinks.set(connectionId, link);
   }
+  
 }

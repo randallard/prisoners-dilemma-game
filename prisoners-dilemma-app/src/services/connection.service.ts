@@ -488,4 +488,39 @@ export class ConnectionService {
       typeof item.createdAt === 'number'
     );
   }
+  
+  /**
+   * Retrieves a shareable connection link for a given connection ID
+   * @param connectionId The ID of the connection to get a link for
+   * @returns A Result with the connection link URL as a string, or an error
+   */
+  public getConnectionLink(connectionId: string): Result<string, ConnectionError> {
+    const idResult = this.validateId(connectionId);
+    if (idResult.isFailure()) {
+      return Result.failure(idResult.getError());
+    }
+    
+    // First check if the connection exists
+    const connectionResult = this.getConnectionById(connectionId);
+    if (connectionResult.isFailure()) {
+      return Result.failure(connectionResult.getError());
+    }
+    
+    try {
+      // Generate a URL with the connection ID
+      const baseUrl = window.location.origin + window.location.pathname;
+      const connectionLink = `${baseUrl}?connection=${connectionId}`;
+      
+      return Result.success(connectionLink);
+    } catch (error) {
+      console.error(`Failed to generate connection link for ID ${connectionId}:`, error);
+      return Result.failure(
+        new ConnectionError(
+          ConnectionErrorType.STORAGE_ERROR,
+          'Failed to generate connection link. Local storage may not be available.'
+        )
+      );
+    }
+  }
+
 }

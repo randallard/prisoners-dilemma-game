@@ -8,14 +8,6 @@
     <link rel="stylesheet" href="./src/index.css" />
     <script type="module" src="/src/components/game-app.ts"></script>
     <script type="module" src="/src/components/player-registration/player-form.ts"></script>
-    <script type="module" src="/src/components/dark-mode-toggle.ts"></script>
-    <script>
-      // Prevent FOUC (Flash of Unstyled Content) by setting theme early
-      const theme = localStorage.getItem('prisonersDilemma_theme');
-      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      }
-    </script>
   </head>
   <body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors">
     <div class="container mx-auto px-4 py-8">

@@ -271,7 +271,7 @@ describe('ConnectionFormComponent', () => {
     expect(linkContainer).to.exist;
     
     // The success indicator is NOT inside the link container, it's a separate element
-    const successIndicator = element.shadowRoot!.querySelector('.link-success-indicator');
+    const successIndicator = element.shadowRoot!.querySelector('.success-message');
     expect(successIndicator).to.exist;
     expect(successIndicator!.textContent!.trim()).to.include('Connection link generated');
   });

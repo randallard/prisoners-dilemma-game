@@ -2,10 +2,8 @@ import { LitElement, html, css, unsafeCSS } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { PlayerStorageService, PlayerData } from '../services/player-storage.service';
 import { ConnectionService } from '../services/connection.service';
-import { DarkModeService } from '../services/dark-mode.service';
 import './player-registration/player-form';
 import './connection/connection-manager';
-import './dark-mode-toggle';
 
 // Import Tailwind styles
 import tailwindStyles from '../tailwind-output.css?inline';
@@ -24,7 +22,6 @@ export class GameApp extends LitElement {
   // These will be injected in tests but created normally in connectedCallback
   public playerStorageService: PlayerStorageService = new PlayerStorageService();
   public connectionService: ConnectionService = new ConnectionService();
-  public darkModeService: DarkModeService = new DarkModeService();
   
   // Bound event handler reference - important for proper removeEventListener
   // Changed type from CustomEvent to Event to match EventListener interface
@@ -37,7 +34,20 @@ export class GameApp extends LitElement {
   }
   
   // Use unsafeCSS to include the Tailwind styles
-  static styles = css`${unsafeCSS(tailwindStyles)}`;
+  static styles = css`
+    ${unsafeCSS(tailwindStyles)}
+    
+    /* Ensure the dark mode toggle is visible and has appropriate spacing */
+    .game-header {
+      position: relative;
+      z-index: 5;
+    }
+    
+    dark-mode-toggle {
+      display: inline-block;
+      margin-right: 12px;
+    }
+  `;
   
   connectedCallback() {
     super.connectedCallback();
@@ -45,10 +55,8 @@ export class GameApp extends LitElement {
     // Initialize services
     this.playerStorageService = new PlayerStorageService();
     this.connectionService = new ConnectionService();
-    this.darkModeService = new DarkModeService();
     
     // Initialize dark mode
-    this.darkModeService.initializeDarkMode();
     
     // Load existing player data or show registration
     const playerResult = this.playerStorageService.getPlayer();
@@ -109,9 +117,8 @@ export class GameApp extends LitElement {
   
   private _renderRegistration() {
     return html`
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-4 game-header">
         <div></div>
-        <dark-mode-toggle></dark-mode-toggle>
       </div>
       <player-form @register=${this._handleRegister}></player-form>
     `;
@@ -120,7 +127,7 @@ export class GameApp extends LitElement {
   private _renderGameLobby() {
     return html`
       <div class="game-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+        <div class="game-header flex flex-col md:flex-row md:justify-between md:items-center mb-8">
           <div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
               Prisoner's Dilemma
@@ -136,7 +143,7 @@ export class GameApp extends LitElement {
             </div>
           </div>
           
-          <div class="mt-4 md:mt-0 flex items-center space-x-4">
+          <div class="mt-4 md:mt-0 flex items-center space-x-2">
             <dark-mode-toggle></dark-mode-toggle>
             <button
               @click=${this._handleSignOut}
@@ -155,12 +162,12 @@ export class GameApp extends LitElement {
   private _renderActiveGame() {
     return html`
       <div class="game-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
+        <div class="game-header flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Game with ${this.activeConnection?.name}
           </h2>
           
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
             <dark-mode-toggle></dark-mode-toggle>
             <button
               @click=${this._handleExitGame}
@@ -186,7 +193,7 @@ export class GameApp extends LitElement {
   private _renderErrorScreen() {
     return html`
       <div class="error-screen bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-4">
+        <div class="game-header flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-center text-red-600 dark:text-red-400">
             Error
           </h2>

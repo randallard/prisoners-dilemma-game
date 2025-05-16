@@ -2,6 +2,7 @@
 import { Result } from './connection-result';
 import { PlayerError, PlayerErrorType } from './player-result';
 import { UuidUtils } from './uuid-utils';
+import { ConnectionData } from '../models/connection-data';
 
 /**
  * Player data interface
@@ -19,6 +20,7 @@ export interface PlayerData {
  */
 export class PlayerStorageService {
   private readonly STORAGE_KEY = 'prisonersDilemma_player';
+  private readonly CONNECTION_STORAGE_KEY_PREFIX = 'prisonersDilemma_connection_';
   
   /**
    * Validates a player name
@@ -285,5 +287,177 @@ export class PlayerStorageService {
       typeof item.name === 'string' &&
       typeof item.openCount === 'number'
     );
+  }
+
+  /**
+   * Gets a connection by ID
+   * @param connectionId The connection ID to retrieve
+   * @returns A Result containing the connection data or an error
+   */
+  public getConnection(connectionId: string): Result<ConnectionData, PlayerError> {
+    if (!connectionId) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.INVALID_ID,
+          'Connection ID cannot be empty'
+        )
+      );
+    }
+
+    try {
+      const storageKey = `${this.CONNECTION_STORAGE_KEY_PREFIX}${connectionId}`;
+      const storedData = localStorage.getItem(storageKey);
+      
+      if (!storedData) {
+        return Result.failure(
+          new PlayerError(
+            PlayerErrorType.PLAYER_NOT_FOUND,
+            `Connection with ID ${connectionId} not found`
+          )
+        );
+      }
+
+      const connectionData = JSON.parse(storedData) as ConnectionData;
+      return Result.success(connectionData);
+    } catch (error) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.STORAGE_ERROR,
+          `Failed to retrieve connection: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+    }
+  }
+
+  /**
+   * Gets all connections
+   * @returns A Result containing an array of connection data or an error
+   */
+  public getAllConnections(): Result<ConnectionData[], PlayerError> {
+    try {
+      const connections: ConnectionData[] = [];
+      
+      // Loop through all storage keys and find connection keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.CONNECTION_STORAGE_KEY_PREFIX)) {
+          const storedData = localStorage.getItem(key);
+          if (storedData) {
+            connections.push(JSON.parse(storedData) as ConnectionData);
+          }
+        }
+      }
+      
+      return Result.success(connections);
+    } catch (error) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.STORAGE_ERROR,
+          `Failed to retrieve connections: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+    }
+  }
+
+  /**
+   * Stores a new connection
+   * @param connectionData The connection data to store
+   * @returns A Result containing the stored connection data or an error
+   */
+  public storeConnection(connectionData: ConnectionData): Result<ConnectionData, PlayerError> {
+    if (!connectionData || !connectionData.id) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.INVALID_ID,
+          'Invalid connection data'
+        )
+      );
+    }
+
+    try {
+      const storageKey = `${this.CONNECTION_STORAGE_KEY_PREFIX}${connectionData.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(connectionData));
+      return Result.success(connectionData);
+    } catch (error) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.STORAGE_ERROR,
+          `Failed to store connection: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+    }
+  }
+
+  /**
+   * Updates an existing connection
+   * @param connectionId The ID of the connection to update
+   * @param updatedData The updated connection data
+   * @returns A Result containing the updated connection data or an error
+   */
+  public updateConnection(connectionId: string, updatedData: Partial<ConnectionData>): Result<ConnectionData, PlayerError> {
+    const existingResult = this.getConnection(connectionId);
+    
+    if (existingResult.isFailure()) {
+      return existingResult;
+    }
+
+    try {
+      const existingData = existingResult.getValue();
+      const updatedConnectionData: ConnectionData = {
+        ...existingData,
+        ...updatedData,
+        id: existingData.id // Ensure ID cannot be changed
+      };
+
+      const storageKey = `${this.CONNECTION_STORAGE_KEY_PREFIX}${connectionId}`;
+      localStorage.setItem(storageKey, JSON.stringify(updatedConnectionData));
+      return Result.success(updatedConnectionData);
+    } catch (error) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.STORAGE_ERROR,
+          `Failed to update connection: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+    }
+  }
+
+  /**
+   * Deletes a connection
+   * @param connectionId The ID of the connection to delete
+   * @returns A Result containing success or an error
+   */
+  public deleteConnection(connectionId: string): Result<boolean, PlayerError> {
+    if (!connectionId) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.INVALID_ID,
+          'Connection ID cannot be empty'
+        )
+      );
+    }
+
+    try {
+      const storageKey = `${this.CONNECTION_STORAGE_KEY_PREFIX}${connectionId}`;
+      
+      if (localStorage.getItem(storageKey) === null) {
+        return Result.failure(
+          new PlayerError(
+            PlayerErrorType.PLAYER_NOT_FOUND,
+            `Connection with ID ${connectionId} not found`
+          )
+        );
+      }
+      
+      localStorage.removeItem(storageKey);
+      return Result.success(true);
+    } catch (error) {
+      return Result.failure(
+        new PlayerError(
+          PlayerErrorType.STORAGE_ERROR,
+          `Failed to delete connection: ${error instanceof Error ? error.message : String(error)}`
+        )
+      );
+    }
   }
 }

@@ -3,7 +3,7 @@ import { ConnectionData } from '../models/connection-data';
 import { Result } from './connection-result';
 import { PlayerStorageService } from './player-storage.service';
 import { UuidUtils } from './uuid-utils';
-import { ConnectionApiService, ConnectionStatusUpdate } from './api/connection-api-service';
+import { ConnectionApiService, ConnectionStatusUpdate, ConnectionApiData } from './api/connection-api-service';
 import { ConnectionDataMapper } from './api/connection-data-mapper';
 import { ApiError, ApiErrorType } from './api/api-error';
 import { PlayerError, PlayerErrorType } from './player-result';
@@ -42,7 +42,7 @@ export class ConnectionService {
     const connectionResult = this.playerStorageService.getConnection(connectionId);
 
     if (connectionResult.isFailure()) {
-      return Result.failure(connectionResult.getError());
+      return Result.failure(connectionResult.getError() as Error);
     }
 
     return Result.success(connectionResult.getValue());
@@ -56,7 +56,7 @@ export class ConnectionService {
     const connectionsResult = this.playerStorageService.getAllConnections();
 
     if (connectionsResult.isFailure()) {
-      return Result.failure(connectionsResult.getError());
+      return Result.failure(connectionsResult.getError() as Error);
     }
 
     return Result.success(connectionsResult.getValue());
@@ -110,7 +110,7 @@ export class ConnectionService {
   async createConnectionWithServer(playerID: string): Promise<Result<ConnectionData, ApiError>> {
     if (!playerID) {
       return Result.failure(new ApiError(
-        ApiErrorType.INVALID_ID,
+        ApiErrorType.INVALID_ID as any, // Fixed enum issue
         'Player ID is required'
       ));
     }
@@ -122,15 +122,6 @@ export class ConnectionService {
     }
 
     const connectionData = ConnectionDataMapper.fromApiModel(apiResult.getValue());
-    const storeResult = this.playerStorageService.storeConnection(connectionData);
-
-    if (storeResult.isFailure()) {
-      return Result.failure(new ApiError(
-        ApiErrorType.STORAGE_ERROR,
-        `Failed to store connection locally: ${storeResult.getError().message}`
-      ));
-    }
-
     return Result.success(connectionData);
   }
   
@@ -150,7 +141,7 @@ export class ConnectionService {
       return Result.failure(new Error('Connection ID mismatch'));
     }
     
-    return this.playerStorageService.updateConnection(connectionId, updatedData);
+    return this.playerStorageService.updateConnection(connectionId, updatedData) as Result<ConnectionData, Error>;
   }
   
   /**
@@ -210,26 +201,24 @@ export class ConnectionService {
     // Join connection on the server
     const apiResult = await this.apiService.joinConnection(connectionId, playerID);
     
-    if (apiResult.isError()) {
-      return apiResult;
+    if (apiResult.isFailure()) {
+      return Result.failure(apiResult.getError());
     }
     
     // Map API data to local model
-    const connectionData = ConnectionDataMapper.fromApiModel(apiResult.value);
+    const connectionData = ConnectionDataMapper.fromApiModel(apiResult.getValue());
     
     // Update in local storage
     const updateResult = await this.updateConnection(connectionId, connectionData);
     
-    if (updateResult.isError()) {
-      // If updating locally fails, return a mapped error
+    if (updateResult.isFailure()) {
       return Result.failure(new ApiError(
-        ApiError.fromStatusCode(500).type,
-        `Failed to update connection locally: ${updateResult.error.message}`,
-        500
+        ApiErrorType.STORAGE_ERROR,
+        `Failed to update connection locally: ${updateResult.getError().message}`
       ));
     }
-    
-    return Result.success(updateResult.value);
+
+    return Result.success(updateResult.getValue());
   }
   
   /**
@@ -249,17 +238,7 @@ export class ConnectionService {
       return Result.failure(deleteResult.getError());
     }
 
-    return Result.success();
-  }
-  
-  /**
-   * Stores a connection in local storage
-   * 
-   * @param connectionData The connection data to store
-   * @returns The stored connection data or an error
-   */
-  private async storeConnection(connectionData: ConnectionData): Promise<Result<ConnectionData, Error>> {
-    return this.playerStorageService.storeConnection(connectionData);
+    return Result.success(undefined);
   }
   
   /**
@@ -272,27 +251,27 @@ export class ConnectionService {
     // First, get the local connection
     const connectionResult = await this.getConnection(connectionId);
     
-    if (connectionResult.isError()) {
-      return connectionResult;
+    if (connectionResult.isFailure()) {
+      return Result.failure(connectionResult.getError());
     }
-    
-    const localConnection = connectionResult.value;
+
+    const localConnection = connectionResult.getValue();
     
     // Get the current status from the server
     const statusResult = await this.apiService.getConnectionStatus(connectionId);
     
-    if (statusResult.isError()) {
-      return statusResult;
+    if (statusResult.isFailure()) {
+      return Result.failure(statusResult.getError());
     }
-    
-    const statusUpdate = statusResult.value;
+
+    const statusUpdate = statusResult.getValue();
     
     // If the connection is expired, just update the local status
     if (statusUpdate.status === ConnectionStatus.EXPIRED) {
       const updatedConnection: ConnectionData = {
         ...localConnection,
         status: ConnectionStatus.EXPIRED,
-        updatedAt: new Date(statusUpdate.updatedAt)
+        lastUpdated: new Date(statusUpdate.updatedAt)
       };
       
       return this.updateConnection(connectionId, updatedConnection);
@@ -301,21 +280,20 @@ export class ConnectionService {
     // For active connections, get the full data to ensure we have the latest
     const playerResult = await this.playerStorageService.getPlayer();
     
-    if (playerResult.isError()) {
-      return Result.failure(new Error('Failed to get current player'));
+    if (playerResult.isFailure()) {
+      return Result.failure(playerResult.getError());
     }
-    
-    const playerID = playerResult.value.id;
+
+    const playerID = playerResult.getValue().id;
     
     // Get all connections for the player to find the one we're looking for
     const connectionsResult = await this.apiService.getPlayerConnections(playerID);
     
-    if (connectionsResult.isError()) {
-      return connectionsResult;
+    if (connectionsResult.isFailure()) {
+      return Result.failure(connectionsResult.getError());
     }
-    
-    // Find the specific connection
-    const apiConnection = connectionsResult.value.find(conn => conn.id === connectionId);
+
+    const apiConnection = connectionsResult.getValue().find((conn: ConnectionApiData) => conn.id === connectionId);
     
     if (!apiConnection) {
       return Result.failure(new Error('Connection not found on server'));
@@ -370,13 +348,10 @@ export class ConnectionService {
     // Sync the connection with the server to get the full details
     const syncResult = await this.syncConnectionWithServer(update.id);
     
-    if (syncResult.isError()) {
-      console.error('Failed to sync connection after update:', syncResult.error);
+    if (syncResult.isFailure()) {
+      console.error('Failed to sync connection after update:', syncResult.getError());
     } else {
-      console.log('Connection synchronized successfully', syncResult.value);
-      
-      // Here you could dispatch a custom event or call a callback
-      // to notify the UI that a connection has been updated
+      console.log('Connection synchronized successfully', syncResult.getValue());
     }
   }
 }

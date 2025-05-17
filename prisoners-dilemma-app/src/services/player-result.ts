@@ -12,9 +12,9 @@ export enum PlayerErrorType {
 /**
  * Player error with type and message
  */
-export class PlayerError {
-  constructor(
-    public readonly type: PlayerErrorType,
-    public readonly message: string
-  ) {}
+export class PlayerError extends Error {
+  constructor(public type: PlayerErrorType, message: string) {
+    super(message);
+    this.name = 'PlayerError';
+  }
 }

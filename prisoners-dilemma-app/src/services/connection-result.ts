@@ -5,6 +5,9 @@
  * @template E The type of the error on failure
  */
 export class Result<T, E = Error> {
+    error(_error: any) {
+      throw new Error('Method not implemented.');
+    }
     private readonly _value?: T;
     private readonly _error?: E;
     private readonly _isSuccess: boolean;

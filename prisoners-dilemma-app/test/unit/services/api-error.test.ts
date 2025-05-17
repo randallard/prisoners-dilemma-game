@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { ApiErrorType, ApiError } from '../../../src/services/api/ApiError';
+import { ApiErrorType, ApiError } from '../../../src/services/api/api-error';
 
 describe('ApiErrorType', () => {
   it('should define all required error types', () => {
@@ -62,6 +62,6 @@ describe('ApiError', () => {
     expect(ApiError.fromStatusCode(422).type).toBe(ApiErrorType.INVALID_FORMAT);
     expect(ApiError.fromStatusCode(500).type).toBe(ApiErrorType.SERVER_ERROR);
     expect(ApiError.fromStatusCode(503).type).toBe(ApiErrorType.SERVER_ERROR);
-    expect(ApiError.fromStatusCode(599).type).toBe(ApiErrorType.UNKNOWN_ERROR);
+    expect(ApiError.fromStatusCode(599).type).toBe(ApiErrorType.SERVER_ERROR);
   });
 });

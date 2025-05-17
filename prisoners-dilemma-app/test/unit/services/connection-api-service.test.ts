@@ -1,8 +1,14 @@
-import { expect } from 'vitest';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { ConnectionApiService } from '../../../src/services/api/connection-api-service';
 import { ApiError, ApiErrorType } from '../../../src/services/api/api-error';
 import { ConnectionStatus } from '../../../src/models/connection-status';
-import { Result } from '../../../src/utils/Result';
+
+const WebSocketReadyState = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3
+};
 
 // Mock WebSocket implementation for testing
 class MockWebSocket {
@@ -25,12 +31,6 @@ class MockWebSocket {
     // Mock implementation
   }
   
-  // Helper methods for testing
-  simulateOpen(): void {
-    this.readyState = 1; // WebSocket.OPEN
-    if (this.onopen) this.onopen({ type: 'open' });
-  }
-  
   simulateMessage(data: any): void {
     if (this.onmessage) this.onmessage({ data: JSON.stringify(data) });
   }
@@ -39,8 +39,13 @@ class MockWebSocket {
     if (this.onerror) this.onerror({ type: 'error' });
   }
   
+  simulateOpen(): void {
+    this.readyState = WebSocketReadyState.OPEN;
+    if (this.onopen) this.onopen({ type: 'open' });
+  }
+  
   simulateClose(code: number = 1000, reason: string = ''): void {
-    this.readyState = 3; // WebSocket.CLOSED
+    this.readyState = WebSocketReadyState.CLOSED;
     if (this.onclose) this.onclose({ code, reason, type: 'close' });
   }
 }
@@ -48,7 +53,7 @@ class MockWebSocket {
 // Mock fetch implementation for testing
 global.fetch = vi.fn();
 // Mock WebSocket implementation
-global.WebSocket = MockWebSocket as any;
+(global.WebSocket as unknown) = MockWebSocket;
 
 describe('ConnectionApiService', () => {
   let apiService: ConnectionApiService;
@@ -73,11 +78,11 @@ describe('ConnectionApiService', () => {
           createdAt: '2025-05-15T12:00:00Z'
         })
       };
-      
+
       (global.fetch as any).mockResolvedValueOnce(mockResponse);
-      
+
       const result = await apiService.createConnection(playerID);
-      
+
       expect(global.fetch).toHaveBeenCalledWith(
         `${apiUrl}/connections`,
         expect.objectContaining({
@@ -88,12 +93,12 @@ describe('ConnectionApiService', () => {
           body: expect.any(String)
         })
       );
-      
+
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value.id).toBe('conn-456');
-        expect(result.value.playerID).toBe(playerID);
-        expect(result.value.status).toBe(ConnectionStatus.PENDING);
+        expect(result.getValue().id).toBe('conn-456');
+        expect(result.getValue().playerID).toBe(playerID);
+        expect(result.getValue().status).toBe(ConnectionStatus.PENDING);
       }
     });
     
@@ -102,10 +107,10 @@ describe('ConnectionApiService', () => {
       
       const result = await apiService.createConnection('123');
       
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
-        expect(result.error).toBeInstanceOf(ApiError);
-        expect(result.error.type).toBe(ApiErrorType.NETWORK_ERROR);
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
+        expect(result.getError()).toBeInstanceOf(ApiError);
+        expect(result.getError().type).toBe(ApiErrorType.NETWORK_ERROR);
       }
     });
     
@@ -121,11 +126,11 @@ describe('ConnectionApiService', () => {
       
       const result = await apiService.createConnection('123');
       
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
-        expect(result.error).toBeInstanceOf(ApiError);
-        expect(result.error.type).toBe(ApiErrorType.SERVER_ERROR);
-        expect(result.error.statusCode).toBe(500);
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
+        expect(result.getError()).toBeInstanceOf(ApiError);
+        expect(result.getError().type).toBe(ApiErrorType.SERVER_ERROR);
+        expect(result.getError().statusCode).toBe(500);
       }
     });
   });
@@ -163,9 +168,9 @@ describe('ConnectionApiService', () => {
       
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value.id).toBe(connectionId);
-        expect(result.value.connectedPlayerID).toBe(playerID);
-        expect(result.value.status).toBe(ConnectionStatus.ACTIVE);
+        expect(result.getValue().id).toBe(connectionId);
+        expect(result.getValue().connectedPlayerID).toBe(playerID);
+        expect(result.getValue().status).toBe(ConnectionStatus.ACTIVE);
       }
     });
     
@@ -181,11 +186,11 @@ describe('ConnectionApiService', () => {
       
       const result = await apiService.joinConnection('invalid-id', '789');
       
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
-        expect(result.error).toBeInstanceOf(ApiError);
-        expect(result.error.type).toBe(ApiErrorType.CONNECTION_NOT_FOUND);
-        expect(result.error.statusCode).toBe(404);
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
+        expect(result.getError()).toBeInstanceOf(ApiError);
+        expect(result.getError().type).toBe(ApiErrorType.CONNECTION_NOT_FOUND);
+        expect(result.getError().statusCode).toBe(404);
       }
     });
   });
@@ -217,7 +222,7 @@ describe('ConnectionApiService', () => {
       
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value.status).toBe(ConnectionStatus.ACTIVE);
+        expect(result.getValue().status).toBe(ConnectionStatus.ACTIVE);
       }
     });
   });
@@ -229,7 +234,7 @@ describe('ConnectionApiService', () => {
       const connectResult = await apiService.connectWebSocket(playerId);
       expect(connectResult.isSuccess()).toBe(true);
       
-      const mockWs = apiService['webSocket'] as MockWebSocket;
+      const mockWs = apiService['webSocket'] as unknown as MockWebSocket;
       expect(mockWs.url).toBe(`${wsUrl}?playerId=${playerId}`);
       
       // Simulate successful connection
@@ -244,7 +249,7 @@ describe('ConnectionApiService', () => {
       const connectResult = await apiService.connectWebSocket(playerId);
       expect(connectResult.isSuccess()).toBe(true);
       
-      const mockWs = apiService['webSocket'] as MockWebSocket;
+      const mockWs = apiService['webSocket'] as unknown as MockWebSocket;
       
       // Simulate connection error
       mockWs.simulateError();
@@ -263,7 +268,7 @@ describe('ConnectionApiService', () => {
       });
       
       await apiService.connectWebSocket(playerId);
-      const mockWs = apiService['webSocket'] as MockWebSocket;
+      const mockWs = apiService['webSocket'] as unknown as MockWebSocket;
       mockWs.simulateOpen();
       
       // Simulate receiving a connection update
@@ -285,19 +290,22 @@ describe('ConnectionApiService', () => {
     
     it('should handle WebSocket disconnection', async () => {
       const playerId = '123';
-      
+
       await apiService.connectWebSocket(playerId);
-      const mockWs = apiService['webSocket'] as MockWebSocket;
+      const mockWs = apiService['webSocket'] as unknown as MockWebSocket;
       mockWs.simulateOpen();
-      
+
       // Initially connected
       expect(apiService.isConnected()).toBe(true);
-      
+
       // Simulate disconnection
       mockWs.simulateClose(1000, 'Normal closure');
-      
+
       // Should now be disconnected
       expect(apiService.isConnected()).toBe(false);
+
+      // Ensure the WebSocket property is null
+      expect(apiService['webSocket']).toBeNull();
     });
     
     it('should automatically reconnect after disconnection', async () => {
@@ -306,7 +314,7 @@ describe('ConnectionApiService', () => {
       vi.useFakeTimers();
       
       await apiService.connectWebSocket(playerId, true); // Enable auto-reconnect
-      let mockWs = apiService['webSocket'] as MockWebSocket;
+      let mockWs = apiService['webSocket'] as unknown as MockWebSocket;
       mockWs.simulateOpen();
       
       // Simulate disconnection
@@ -316,7 +324,7 @@ describe('ConnectionApiService', () => {
       vi.advanceTimersByTime(5000);
       
       // Should have attempted to reconnect
-      mockWs = apiService['webSocket'] as MockWebSocket; // Get the new instance
+      mockWs = apiService['webSocket'] as unknown as MockWebSocket; // Get the new instance
       expect(mockWs.url).toBe(`${wsUrl}?playerId=${playerId}`);
       
       vi.useRealTimers();

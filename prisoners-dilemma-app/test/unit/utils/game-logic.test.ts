@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateScore, PlayerChoice } from './game-logic';
+import { calculateScore, PlayerChoice } from '../../../src/utils/game-logic';
 
 describe('Game Logic', () => {
   it('calculates correct score when both cooperate', () => {

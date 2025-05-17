@@ -36,6 +36,16 @@ export enum WebSocketMessageType {
 }
 
 /**
+ * Enum for WebSocket ready states
+ */
+export enum WebSocketReadyState {
+  CONNECTING = 0,
+  OPEN = 1,
+  CLOSING = 2,
+  CLOSED = 3
+}
+
+/**
  * Interface for WebSocket messages
  */
 export interface WebSocketMessage {
@@ -272,7 +282,7 @@ export class ConnectionApiService {
    * @returns true if connected, false otherwise
    */
   isConnected(): boolean {
-    return this.webSocket !== null && this.webSocket.readyState === WebSocket.OPEN;
+    return this.webSocket !== null && this.webSocket.readyState === WebSocketReadyState.OPEN;
   }
 
   /**
@@ -385,20 +395,15 @@ export class ConnectionApiService {
    */
   private handleWebSocketClose(event: CloseEvent): void {
     console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
-    this.webSocket = null;
-    
+    this.webSocket = null; // Ensure the WebSocket property is set to null
+
     if (this.autoReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
-      // Exponential backoff for reconnect attempts
-      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
       this.reconnectAttempts++;
-      
-      console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
       setTimeout(() => {
         if (this.playerID) {
           this.connectWebSocket(this.playerID, true);
         }
-      }, delay);
+      }, this.reconnectDelay);
     }
   }
 

@@ -1,16 +1,16 @@
 import { expect } from 'vitest';
-import { ConnectionService } from '../../../src/services/ConnectionService';
-import { ConnectionApiService, ConnectionApiData, ConnectionStatusUpdate } from '../../../src/services/api/ConnectionApiService';
-import { ConnectionDataMapper } from '../../../src/services/api/ConnectionDataMapper';
-import { ApiError, ApiErrorType } from '../../../src/services/api/ApiError';
-import { ConnectionStatus } from '../models/connection-status';
-import { Result } from '../../../src/utils/Result';
-import { ConnectionData } from '../../../src/models/ConnectionData';
+import { ConnectionService } from '../../../src/services/connection-service';
+import { ConnectionApiService, ConnectionApiData, ConnectionStatusUpdate } from '../../../src/services/api/connection-api-service';
+import { ConnectionDataMapper } from '../../../src/services/api/connection-data-mapper';
+import { ApiError, ApiErrorType } from '../../../src/services/api/api-error';
+import { ConnectionStatus } from '../../../src/models/connection-status';
+import { Result } from '../../../src/services/utils/result';
+import { ConnectionData } from '../../../src/models/connection-data';
 
 // Mock dependencies
-vi.mock('../../../src/services/api/ConnectionApiService');
-vi.mock('../../../src/services/api/ConnectionDataMapper');
-vi.mock('../../../src/services/PlayerStorageService');
+vi.mock('../../../src/services/api/connection-api-service');
+vi.mock('../../../src/services/api/connection-data-mapper');
+vi.mock('../../../src/services/player-storage-service');
 
 describe('ConnectionService with API integration', () => {
   let connectionService: ConnectionService;
@@ -47,7 +47,8 @@ describe('ConnectionService with API integration', () => {
         id: 'conn-456',
         playerID: playerID,
         status: ConnectionStatus.PENDING,
-        createdAt: '2025-05-15T12:00:00Z'
+        createdAt: '2025-05-15T12:00:00Z',
+        name: 'player-456'
       };
       
       const localConnection = {
@@ -85,7 +86,7 @@ describe('ConnectionService with API integration', () => {
       // Verify successful result
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value).toEqual(localConnection);
+        expect(result.getValue()).toEqual(localConnection);
       }
     });
     
@@ -98,7 +99,7 @@ describe('ConnectionService with API integration', () => {
       
       // Mock API service to return an error
       (mockApiService.createConnection as vi.Mock).mockResolvedValue(
-        Result.error(apiError)
+        Result.failure(apiError)
       );
       
       const result = await connectionService.createConnectionWithServer(playerID);
@@ -110,9 +111,9 @@ describe('ConnectionService with API integration', () => {
       expect((connectionService as any).storeConnection).not.toHaveBeenCalled();
       
       // Verify error result
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
-        expect(result.error).toBe(apiError);
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
+        expect(result.getError()).toBe(apiError);
       }
     });
   });
@@ -128,7 +129,8 @@ describe('ConnectionService with API integration', () => {
         connectedPlayerID: playerID,
         status: ConnectionStatus.ACTIVE,
         createdAt: '2025-05-15T12:00:00Z',
-        updatedAt: '2025-05-15T12:30:00Z'
+        updatedAt: '2025-05-15T12:30:00Z',
+        name: ''
       };
       
       const localConnection: ConnectionData = {
@@ -168,7 +170,7 @@ describe('ConnectionService with API integration', () => {
       // Verify successful result
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value).toEqual(localConnection);
+        expect(result.getValue()).toEqual(localConnection);
       }
     });
     
@@ -183,7 +185,7 @@ describe('ConnectionService with API integration', () => {
       
       // Mock API service to return an error
       (mockApiService.joinConnection as vi.Mock).mockResolvedValue(
-        Result.error(apiError)
+        Result.failure(apiError)
       );
       
       const result = await connectionService.joinConnectionWithServer(connectionId, playerID);
@@ -195,9 +197,9 @@ describe('ConnectionService with API integration', () => {
       expect((connectionService as any).updateConnection).not.toHaveBeenCalled();
       
       // Verify error result
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
-        expect(result.error).toBe(apiError);
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
+        expect(result.getError()).toBe(apiError);
       }
     });
   });
@@ -226,7 +228,8 @@ describe('ConnectionService with API integration', () => {
         connectedPlayerID: 'player-789',
         status: ConnectionStatus.ACTIVE,
         createdAt: '2025-05-15T12:00:00Z',
-        updatedAt: '2025-05-15T12:30:00Z'
+        updatedAt: '2025-05-15T12:30:00Z',
+        name: ''
       };
       
       const updatedConnection: ConnectionData = {
@@ -279,7 +282,7 @@ describe('ConnectionService with API integration', () => {
       // Verify successful result
       expect(result.isSuccess()).toBe(true);
       if (result.isSuccess()) {
-        expect(result.value).toEqual(updatedConnection);
+        expect(result.getValue()).toEqual(updatedConnection);
       }
     });
     
@@ -338,7 +341,7 @@ describe('ConnectionService with API integration', () => {
       
       // Mock getConnection to return error
       (connectionService as any).getConnection = vi.fn().mockResolvedValue(
-        Result.error(new Error('Connection not found'))
+        Result.failure(new Error('Connection not found'))
       );
       
       const result = await connectionService.syncConnectionWithServer(connectionId);
@@ -347,7 +350,7 @@ describe('ConnectionService with API integration', () => {
       expect(mockApiService.getConnectionStatus).not.toHaveBeenCalled();
       
       // Verify error result
-      expect(result.isError()).toBe(true);
+      expect(result.isFailure()).toBe(true);
     });
     
     it('should return an error if API request fails', async () => {
@@ -373,7 +376,7 @@ describe('ConnectionService with API integration', () => {
       
       // Mock API service to return an error
       (mockApiService.getConnectionStatus as vi.Mock).mockResolvedValue(
-        Result.error(apiError)
+        Result.failure(apiError)
       );
       
       const result = await connectionService.syncConnectionWithServer(connectionId);
@@ -382,8 +385,8 @@ describe('ConnectionService with API integration', () => {
       expect((connectionService as any).updateConnection).not.toHaveBeenCalled();
       
       // Verify error result
-      expect(result.isError()).toBe(true);
-      if (result.isError()) {
+      expect(result.isFailure()).toBe(true);
+      if (result.isFailure()) {
         expect(result.error).toBe(apiError);
       }
     });

@@ -13,13 +13,19 @@
 #
 # 4. Include both journal entries and user stories
 #    .\get-current-for-ai.ps1 -JournalEntries 2 -IncludeUserStories
+#
+# 5. Include a specific documentation file
+#    .\get-current-for-ai.ps1 -Doc "technical/architecture.md"
 
 param (
     [Parameter()]
     [int]$JournalEntries = 0,  # Number of recent journal entries to include (0 = none)
 
     [Parameter()]
-    [switch]$IncludeUserStories = $false  # Flag to include user stories documentation
+    [switch]$IncludeUserStories = $false,  # Flag to include user stories documentation
+
+    [Parameter()]
+    [string]$Doc = ""  # Path to a specific documentation file to include (relative to docs folder)
 )
 
 # Helper function to copy files to the ai-chat-files directory
@@ -101,6 +107,17 @@ if ($IncludeUserStories) {
     Copy-ToAIChatFiles -SourcePath $userStoriesPath
     if ($?) {
         Write-Host "Included user stories file as requested" -ForegroundColor Cyan
+    }
+}
+
+# Copy a specific documentation file if the -Doc parameter is provided
+if ($Doc -ne "") {
+    $docPath = "../prisoners-dilemma-docs/docs/$Doc"
+    Copy-ToAIChatFiles -SourcePath $docPath
+    if ($?) {
+        Write-Host "Included documentation file '$Doc' as requested" -ForegroundColor Cyan
+    } else {
+        Write-Host "Failed to include documentation file '$Doc'. Please check if the path is correct." -ForegroundColor Red
     }
 }
 

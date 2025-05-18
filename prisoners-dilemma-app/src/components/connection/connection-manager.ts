@@ -138,7 +138,7 @@ export class ConnectionManagerComponent extends LitElement {
         </h3>
         
         <p class="text-blue-700 dark:text-blue-300 mb-4">
-          Someone has invited you to connect. Enter your name to accept the invitation:
+          Someone has invited you to connect. Enter their name to accept the invitation:
         </p>
         
         <form @submit=${this._handleIncomingConnectionSubmit} class="space-y-4">
@@ -159,6 +159,10 @@ export class ConnectionManagerComponent extends LitElement {
               required
             />
           </div>
+          
+          <p class="text-blue-700 dark:text-blue-300 mb-4">
+            This name is just for your list to identify them. It will not be shared with them.
+          </p>
           
           <div class="flex space-x-3">
             <button

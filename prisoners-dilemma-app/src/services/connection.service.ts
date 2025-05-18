@@ -3,8 +3,9 @@ import { Result, ConnectionError, ConnectionErrorType } from './connection-resul
 import { UuidUtils } from './uuid-utils';
 
 export enum ConnectionStatus {
-  PENDING = 'pending',
-  ACTIVE = 'active'
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  EXPIRED = 'EXPIRED'
 }
 
 export interface ConnectionData {
